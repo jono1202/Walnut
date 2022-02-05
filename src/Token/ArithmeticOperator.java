@@ -49,8 +49,6 @@ public class ArithmeticOperator extends Operator{
 			throw new Exception("operator " + op + " cannot be applied to the operand " +b+" of type " + b.getType());		
 		
 		if(a.is(Type.numberLiteral) && b.is(Type.numberLiteral)){
-			if(a.constant < 0 || b.constant < 0)
-				throw new Exception("number literals cannot be negative");
 			switch(op){
 			case "+":
 				S.push(new Expression(Integer.toString(a.constant+b.constant),a.constant+b.constant,number_system));
@@ -59,11 +57,9 @@ public class ArithmeticOperator extends Operator{
 				S.push(new Expression(Integer.toString(a.constant*b.constant),a.constant*b.constant,number_system));
 				return;
 			case "/":
-				if(b.constant == 0)throw new Exception("division by zero");
 				S.push(new Expression(Integer.toString(a.constant/b.constant),a.constant/b.constant,number_system));
 				return;
 			case "-":
-				if((a.constant-b.constant) < 0)throw new Exception("the result of subtraction cannot be negative");
 				S.push(new Expression(Integer.toString(a.constant-b.constant),a.constant-b.constant,number_system));
 				return;
 			}
