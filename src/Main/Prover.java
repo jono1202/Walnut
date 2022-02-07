@@ -133,8 +133,8 @@ public class Prover {
 	 */
 	public static void main(String[] args) throws Exception {
 		UtilityMethods.setPaths();
-		IntegrationTest IT = new IntegrationTest(true);
-		IT.runTestCases(384);
+		//IntegrationTest IT = new IntegrationTest(true);
+		//IT.runTestCases(384);
 		//IT.runPerformanceTest("Walnut with Valmari without refactoring", 5);
 		//IT.runPerformanceTest("Walnut with dk.bricks", 5);
 		//IT.createTestCases();
