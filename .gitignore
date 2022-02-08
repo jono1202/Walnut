@@ -20,3 +20,7 @@ Custom Bases/
 # Directory for experiments
 scratch/
 
+# Intellij Idea Files
+.idea
+**/*.iml
+
