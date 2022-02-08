@@ -88,7 +88,8 @@ public class ArithmeticOperator extends Operator{
 					S.push(new Expression(Integer.toString(a.constant*b.constant),a.constant*b.constant,number_system));
 					return;
 				case "/":
-					S.push(new Expression(Integer.toString(a.constant/b.constant),a.constant/b.constant,number_system));
+					int c = Math.floorDiv(a.constant, b.constant);
+					S.push(new Expression(Integer.toString(c),c,number_system));
 					return;
 				case "-":
 					S.push(new Expression(Integer.toString(a.constant-b.constant),a.constant-b.constant,number_system));

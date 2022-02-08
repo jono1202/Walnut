@@ -4,8 +4,9 @@ eval adder "?msd_neg_3 a + b = c";
 eval comp "?msd_neg_3 a < b";
 eval div2v1 "?msd_neg_2 a = b/2";
 eval div2v2 "?msd_neg_2 a = (0-b)/2";
-eval div2v3 "?msd_neg_2 a = b/(0-2)";
-eval div2v4 "?msd_neg_2 a = (0-b/2)";
+eval div2v3 "?msd_neg_2 _a = b/2";
+eval div2v4 "?msd_neg_2 a = b/(0-2)";
+eval div2v5 "?msd_neg_2 a = 0-(b/2)";
 eval div5v1 "?msd_neg_2 a = b/5";
 eval div5v2 "?msd_neg_2 a = b/(0-5)";
 

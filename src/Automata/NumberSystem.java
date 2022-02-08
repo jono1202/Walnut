@@ -847,27 +847,17 @@ public class NumberSystem {
 			R.sortLabel();
 		} else { // n > 0
 			String a = "a",b = "b",r = "r",q = "q";
-			//a / n = b <=> Er,q a = q + r & q = n*b & ((a > -1 && -1 < r < n) || (a < 0 && -n < r < 1))
+			//a / n = b <=> Er,q a = q + r & q = n*b & -1 < r < n
 			Automaton M = arithmetic(q,r,a,"+");
 			Automaton N = arithmetic(n,b,q,"*");
 
-			// (a > -1 && -1 < r < n)
-			Automaton AP = comparison(a,-1, ">");
+			// -1 < r < n
 			Automaton P1 = comparison(r,-1, ">");
 			Automaton P2 = comparison(r,n, "<");
-			AP = AP.and(P1,false,null,null).and(P2,false,null,null);
-
-			// (a < 0 && -n < r < 1)
-			Automaton AN = comparison(a,0, "<");
-			Automaton N1 = comparison(r,-n, ">");
-			Automaton N2 = comparison(r,1, "<");
-			AN = AN.and(N1,false,null,null).and(N2,false,null,null);
-
-			// ((a > -1 && -1 < r < n) || (a < 0 && -n < r < 1))
-			AP = AP.or(AN, false, null, null);
+			Automaton P = P1.and(P2,false,null,null);
 
 			R = M.and(N,false,null,null);
-			R = R.and(AP,false,null,null);
+			R = R.and(P,false,null,null);
 			R.quantify(q,r, is_msd,false,null,null);
 			R.sortLabel();
 		}
