@@ -31,7 +31,11 @@ public class ArithmeticOperator extends Operator{
 	public ArithmeticOperator(int position,String op, NumberSystem number_system) throws Exception{
 		this.op = op;
 		setPriority();
-		setArity(2);
+		if (op.equals("_")) {
+			setArity(1);
+		} else {
+			setArity(2);
+		}
 		setPositionInPredicate(position);
 		this.number_system = number_system;
 	}
@@ -41,27 +45,54 @@ public class ArithmeticOperator extends Operator{
 	public void act(Stack<Expression> S,boolean print,String prefix,StringBuffer log) throws Exception{
 		if(S.size() < getArity())throw new Exception("operator " + op + " requires " + getArity()+ " operands");
 		Expression b = S.pop();
+		if(!(b.is(Type.arithmetic) || b.is(Type.variable) || b.is(Type.numberLiteral)))
+			throw new Exception("operator " + op + " cannot be applied to the operand " +b+" of type " + b.getType());
+
+		if(op.equals("_")) {
+			if(b.is(Type.numberLiteral)) {
+				S.push(new Expression(Integer.toString(-b.constant), -b.constant, number_system));
+				return;
+			}
+			String c = getUniqueString();
+			// b + c = 0
+			Automaton M = number_system.arithmetic(b.identifier,c,0,"+");
+			String preStep = prefix + "computing " + op+b;
+			log.append(preStep + UtilityMethods.newLine());
+			if(print){
+				System.out.println(preStep);
+			}
+			if(b.is(Type.arithmetic)){
+				// Eb, b + c = 0 & M(b,...)
+				M = M.and(b.M,print,prefix+" ",log);
+				M.quantify(b.identifier,print,prefix+" ",log);
+			}
+			S.push(new Expression("("+op+b+")",M,c));
+			String postStep = prefix + "computed " + op+b;
+			log.append(postStep + UtilityMethods.newLine());
+			if(print){
+				System.out.println(postStep);
+			}
+			return;
+		}
+
 		Expression a = S.pop();
 		if(!(a.is(Type.arithmetic) || a.is(Type.variable) || a.is(Type.numberLiteral)))
 			throw new Exception("operator " + op + " cannot be applied to the operand "+ a+ " of type " + a.getType());
-					
-		if(!(b.is(Type.arithmetic) || b.is(Type.variable) || b.is(Type.numberLiteral)))
-			throw new Exception("operator " + op + " cannot be applied to the operand " +b+" of type " + b.getType());		
-		
+
 		if(a.is(Type.numberLiteral) && b.is(Type.numberLiteral)){
 			switch(op){
-			case "+":
-				S.push(new Expression(Integer.toString(a.constant+b.constant),a.constant+b.constant,number_system));
-				return;
-			case "*":
-				S.push(new Expression(Integer.toString(a.constant*b.constant),a.constant*b.constant,number_system));
-				return;
-			case "/":
-				S.push(new Expression(Integer.toString(a.constant/b.constant),a.constant/b.constant,number_system));
-				return;
-			case "-":
-				S.push(new Expression(Integer.toString(a.constant-b.constant),a.constant-b.constant,number_system));
-				return;
+				case "+":
+					S.push(new Expression(Integer.toString(a.constant+b.constant),a.constant+b.constant,number_system));
+					return;
+				case "*":
+					S.push(new Expression(Integer.toString(a.constant*b.constant),a.constant*b.constant,number_system));
+					return;
+				case "/":
+					S.push(new Expression(Integer.toString(a.constant/b.constant),a.constant/b.constant,number_system));
+					return;
+				case "-":
+					S.push(new Expression(Integer.toString(a.constant-b.constant),a.constant-b.constant,number_system));
+					return;
 			}
 		}
 		String c = getUniqueString();
@@ -71,7 +102,7 @@ public class ArithmeticOperator extends Operator{
 				S.push(new Expression("0",0,number_system));
 				return;
 			}
-			else	
+			else
 				M = number_system.arithmetic(a.constant, b.identifier, c, op);
 		}
 		else if(b.is(Type.numberLiteral)){
@@ -84,7 +115,7 @@ public class ArithmeticOperator extends Operator{
 		else{
 			M = number_system.arithmetic(a.identifier, b.identifier, c, op);
 		}
-		String preStep = prefix + "computing " + a+op+b;  
+		String preStep = prefix + "computing " + a+op+b;
 		log.append(preStep + UtilityMethods.newLine());
 		if(print){
 			System.out.println(preStep);
@@ -97,8 +128,8 @@ public class ArithmeticOperator extends Operator{
 			M = M.and(b.M,print,prefix+" ",log);
 			M.quantify(b.identifier,print,prefix+" ",log);
 		}
-		S.push(new Expression("("+a+op+b+")",M,c));	
-		String postStep = prefix + "computed " + a+op+b;  
+		S.push(new Expression("("+a+op+b+")",M,c));
+		String postStep = prefix + "computed " + a+op+b;
 		log.append(postStep + UtilityMethods.newLine());
 		if(print){
 			System.out.println(postStep);

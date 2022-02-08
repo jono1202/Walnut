@@ -716,7 +716,7 @@ public class NumberSystem {
 	 * @param arithmeticOperator can be any of "+","-","*","/"
 	 * @return an Automaton with two inputs, with labels b and c. It accepts iff c = a arithmeticOperator b.
 	 * Note that the order of inputs, in the resulting
-	 * automaton, is not guaranteed to be in any fixed order like [b,c] or [c,b].
+	 * automaton, is not guaranteed to be in any fixed order like [a,b] or [b,a].
 	 * So the input is not ordered!
 	 * @throws Exception
 	 *
@@ -798,11 +798,11 @@ public class NumberSystem {
 			P = equality;
 		} else if (n < 0) {
 			String a = "a",b = "b",c = "c";
-			// c = (-n)*b
+			// c = (-n)*a
 			Automaton M = getMultiplication(-n);
-			M.bind(b,c);
-			// Ec a + c = 0 & c = (-n)*b
-			P = arithmetic(a,c,0, "+");
+			M.bind(a,c);
+			// Ec b + c = 0 & c = (-n)*a
+			P = arithmetic(b,c,0, "+");
 			P = P.and(M, false, null, null);
 			P.quantify(c,false,null,null);
 			P.sortLabel();

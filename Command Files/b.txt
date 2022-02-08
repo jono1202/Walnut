@@ -1,0 +1,5 @@
+eval negv1 "?msd_neg_2 a = _5";
+eval negv2 "?msd_neg_2 a + _5 = _5";
+eval negv3 "?msd_neg_2 _a + 2 = 0";
+eval negv4 "?msd_neg_2 _2*_a = 6";
+eval negv5 "?msd_neg_2 _(2+a) = 6";

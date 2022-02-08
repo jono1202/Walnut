@@ -72,7 +72,7 @@ public class Predicate {
 	static String REGEXP_FOR_LOGICAL_OPERATORS = "\\G\\s*(`|\\^|\\&|\\~|\\||=>|<=>|E|A)";
 	static String REGEXP_FOR_LIST_OF_QUANTIFIED_VARIABLES = "\\G\\s*((\\s*([a-zA-Z&&[^AE]]\\w*)\\s*)(\\s*,\\s*([a-zA-Z&&[^AE]]\\w*)\\s*)*)";
 	static String REGEXP_FOR_RELATIONAL_OPERATORS = "\\G\\s*(>=|<=|<|>|=|!=)";
-	static String REGEXP_FOR_ARITHMETIC_OPERATORS = "\\G\\s*(/|\\*|\\+|\\-)";
+	static String REGEXP_FOR_ARITHMETIC_OPERATORS = "\\G\\s*(_|/|\\*|\\+|\\-)";
 	static String REGEXP_FOR_NUMBER_SYSTEM = "\\G\\s*\\?(((msd|lsd)_(\\d+|\\w+))|((msd|lsd)(\\d+|\\w+))|(msd|lsd)|(\\d+|\\w+))";
 	static String REGEXP_FOR_WORD = "\\G\\s*([a-zA-Z&&[^AE]]\\w*)\\s*\\[";
 	static String REGEXP_FOR_FUNCTION = "\\G\\s*\\$([a-zA-Z&&[^AE]]\\w*)\\s*\\(";
