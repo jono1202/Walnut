@@ -73,11 +73,6 @@ public class NumberSystem {
 	boolean is_msd;
 
 	/**
-	 * is_neg allows the number system to use negative numbers
-	 */
-	boolean is_neg;
-
-	/**
 	 * Automata for addition, lessThan, and equal<br>
 	 * -addition has three inputs, and it accepts
 	 *  iff the third is the sum of the first two. So the input is ordered!<br>
