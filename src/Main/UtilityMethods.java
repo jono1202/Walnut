@@ -103,6 +103,19 @@ public class UtilityMethods {
 	}
 
 	/**
+	 * Checks if a string is neg_\\d+, then return the number but negative.
+	 * Otherwise, returns 0.
+	 * @param s
+	 * @return
+	 */
+	public static int parseNegNumber(String s){
+		if(!s.matches("^neg_\\d+$")) {
+			return 0;
+		}
+		return parseInt(s.substring(4));
+	}
+
+	/**
 	 * permutes L with regard to permutation. For example if permutation = [1,2,0] then the return value is
 	 * [L[1],L[2],L[0]]
 	 * @param L

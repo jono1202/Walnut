@@ -58,6 +58,7 @@ public abstract class Operator extends Token{
 	}
 	public void setPriority(){
 		switch(op){
+			case "_":priority = 5;break;
 			case "*":priority = 10;break;
 			case "/":priority = 10;break;
 			case "+":priority = 20;break;
