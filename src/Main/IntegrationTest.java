@@ -47,19 +47,19 @@ public class IntegrationTest {
 		try {
 			File file = new File(UtilityMethods.get_address_for_words_library() + "T2.txt");
 			file.getParentFile().mkdirs();
-			out = new PrintWriter("../Word Automata Library/T2.txt", "utf-8");
+			out = new PrintWriter(UtilityMethods.get_address_for_words_library() + "T2.txt", "utf-8");
 			out.write("msd_2 msd_2\n0 1\n0 0 -> 0\n1 0 -> 1\n0 1 -> 1\n1 1 -> 0\n1 0\n0 0 -> 1\n1 0 -> 0\n0 1 -> 0\n1 1 -> 1\n");
 			out.close();
-			out = new PrintWriter("../Word Automata Library/RS.txt", "utf-8");
+			out = new PrintWriter(UtilityMethods.get_address_for_words_library() + "RS.txt", "utf-8");
 			out.write("msd_2\n0 0\n0 -> 0\n1 -> 1\n1 0\n0 -> 0\n1 -> 2\n2 1\n0 -> 3\n1 -> 1\n3 1\n0 -> 3\n1 -> 2\n");
 			out.close();
-			out = new PrintWriter("../Word Automata Library/P.txt", "utf-8");
+			out = new PrintWriter(UtilityMethods.get_address_for_words_library() + "P.txt", "utf-8");
 			out.write("msd_2\n0 0\n0 -> 0\n1 -> 1\n1 0\n0 -> 0\n1 -> 2\n2 1\n0 -> 3\n1 -> 2\n3 1\n0 -> 3\n1 -> 1\n");
 			out.close();
-			out = new PrintWriter("../Word Automata Library/PR.txt", "utf-8");
+			out = new PrintWriter(UtilityMethods.get_address_for_words_library() + "PR.txt", "utf-8");
 			out.write("lsd_2\n0 0\n0 -> 1\n1 -> 0\n1 0\n0 -> 2\n1 -> 3\n2 0\n0 -> 2\n1 -> 2\n3 1\n0 -> 3\n1 -> 3\n");
 			out.close();
-			out = new PrintWriter("../Word Automata Library/PD.txt", "utf-8");
+			out = new PrintWriter(UtilityMethods.get_address_for_words_library() + "PD.txt", "utf-8");
 			out.write("msd_2\n0 1\n0 -> 0\n1 -> 1\n1 0\n0 -> 0\n1 -> 0\n");
 			out.close();
 
@@ -744,7 +744,7 @@ public class IntegrationTest {
 		}
 	}
 	public void createTestCases() throws Exception{
-		for(int i = 0; i < L.size();i++){
+		for(int i = 181; i < 196;i++){
 			String command = L.get(i);
 			System.out.println(command);
 			TestCase test_case = null;
