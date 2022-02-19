@@ -497,6 +497,8 @@ public class NumberSystem {
 	 *
 	 * @param n
 	 * @return an automaton that accepts only n.
+	 * If n < 0 and the current number system does not contain negative numbers, then we always return
+	 * the false automata. So BE CAREFUL when calling on n < 0.
 	 * @throws Exception
 	 */
 	public Automaton get(int n) throws Exception{
@@ -568,13 +570,18 @@ public class NumberSystem {
 	 * @throws Exception
 	 */
 	public Automaton comparison(String a,int b,String comparisonOperator) throws Exception {
-		Automaton N,M;
-		N = get(b);
-		if(comparisonOperator.equals("=")){N.bind(a);return N;}
-		else if(comparisonOperator.equals("!=")){N.bind(a);N.not(false,null,null);return N;}
 		String B = "new " + a;//this way, we make sure B != a.
-		N.bind(B);
-		M = comparison(a, B, comparisonOperator);
+		Automaton N,M;
+		if (b < 0) {
+			M = arithmetic(a,-b,B,"+");
+			N = comparison(B, 0,comparisonOperator);
+		} else { // b >= 0
+			N = get(b);
+			if(comparisonOperator.equals("=")){N.bind(a);return N;}
+			else if(comparisonOperator.equals("!=")){N.bind(a);N.not(false,null,null);return N;}
+			N.bind(B);
+			M = comparison(a, B, comparisonOperator);
+		}
 		M = M.and(N,false,null,null);
 		M.quantify(B,false,null,null);
 		return M;
@@ -588,13 +595,19 @@ public class NumberSystem {
 	 * @throws Exception
 	 */
 	public Automaton comparison(int a,String b,String comparisonOperator) throws Exception {
-		switch(comparisonOperator){
-			case "<":return comparison(b, a, ">");
-			case ">":return comparison(b, a, "<");
-			case "=":return comparison(b, a, "=");
-			case "!=":return comparison(b, a, "!=");
-			case "<=":return comparison(b, a, ">=");
-			case ">=":return comparison(b, a, "<=");
+		switch (comparisonOperator) {
+			case "<":
+				return comparison(b, a, ">");
+			case ">":
+				return comparison(b, a, "<");
+			case "=":
+				return comparison(b, a, "=");
+			case "!=":
+				return comparison(b, a, "!=");
+			case "<=":
+				return comparison(b, a, ">=");
+			case ">=":
+				return comparison(b, a, "<=");
 			default:
 				throw new Exception("undefined comparison operator");
 		}
@@ -653,16 +666,24 @@ public class NumberSystem {
 			N.bind(a,c);
 			return N;
 		}
-		else if(arithmeticOperator.equals("/")){
+		if(arithmeticOperator.equals("/")){
 			if(b == 0)throw new Exception("division by zero");
 			N = getDivision(b);
 			N.bind(a,c);
 			return N;
 		}
-		N = get(b);
+
+		Automaton M;
 		String B = a+c; //this way we make sure that B is not equal to a or c
-		N.bind(B);
-		Automaton M = arithmetic(a, B, c, arithmeticOperator);
+		if(b < 0) { // We rewrite "a-b=c" as "a+(-b)=c" and "a+b=c" as "a-(-b)=c"
+			N = get(-b);
+			N.bind(B);
+			M = arithmetic(a, B, c, arithmeticOperator.equals("+") ? "-" : "+");
+		} else { // b >= 0
+			N = get(b);
+			N.bind(B);
+			M = arithmetic(a, B, c, arithmeticOperator);
+		}
 		M = M.and(N,false,null,null);
 		M.quantify(B,false,null,null);
 		return M;
@@ -692,12 +713,25 @@ public class NumberSystem {
 			N.bind(b,c);
 			return N;
 		}
-		else if(arithmeticOperator.equals("/"))
+		if(arithmeticOperator.equals("/"))
 			throw new Exception("constants cannot be divided by variables");
-		N = get(a);
+
+		Automaton M;
 		String A = b+c; //this way we make sure that A is not equal to b or c
-		N.bind(A);
-		Automaton M = arithmetic(A, b, c, arithmeticOperator);
+		if(a < 0 && arithmeticOperator.equals("+")) { // We rewrite "a+b=c" and "c+(-a)=b"
+			N = get(-a);
+			N.bind(A);
+			M = arithmetic(c, A, b, arithmeticOperator);
+		} else if(a < 0 && arithmeticOperator.equals("-")) { // Notice "a-b=c" is false unless we are in a negative base
+			// So we may call get(a) where a < 0
+			N = get(a);
+			N.bind(A);
+			M = arithmetic(A, b, c, arithmeticOperator);
+		} else { // a >= 0
+			N = get(a);
+			N.bind(A);
+			M = arithmetic(A, b, c, arithmeticOperator);
+		}
 		M = M.and(N,false,null,null);
 		M.quantify(A,false,null,null);
 		return M;
@@ -726,10 +760,23 @@ public class NumberSystem {
 			throw new Exception("the operator * cannot be applied to two variables");
 		} else if(arithmeticOperator.equals("/"))
 			throw new Exception("the operator / cannot be applied to two variables");
-		N = get(c);
+
+		Automaton M;
 		String C = a+b; //this way we make sure that A is not equal to a or b
-		N.bind(C);
-		Automaton M = arithmetic(a, b, C, arithmeticOperator);
+		if(c < 0 && arithmeticOperator.equals("-")) { // We rewrite "a-b=c" and "a+(-c)=b"
+			N = get(-c);
+			N.bind(C);
+			M = arithmetic(a, C, b, arithmeticOperator);
+		} else if (c < 0 && arithmeticOperator.equals("+")) { // Notice "a+b=c" is false unless we are in a negative base
+			// So we may call get(c) where c < 0
+			N = get(c);
+			N.bind(C);
+			M = arithmetic(a, b, C, arithmeticOperator);
+		} else { // c >= 0
+			N = get(c);
+			N.bind(C);
+			M = arithmetic(a, b, C, arithmeticOperator);
+		}
 		M = M.and(N,false,null,null);
 		M.quantify(C,false,null,null);
 		return M;
@@ -754,7 +801,7 @@ public class NumberSystem {
 		} else if (n < 0) {
 			String a = "a",b = "b";
 			// b = -n
-			Automaton M = constant(-n);
+			Automaton M = get(-n);
 			M.bind(b);
 			// Eb, a + b = 0 & b = -n
 			P = arithmetic(a,b,0, "+");
@@ -842,7 +889,7 @@ public class NumberSystem {
 			R.sortLabel();
 		} else { // n > 0
 			String a = "a",b = "b",r = "r",q = "q";
-			//a / n = b <=> Er,q a = q + r & q = n*b & 1 <= r < n
+			//a / n = b <=> Er,q a = q + r & q = n*b & 0 <= r < n
 			Automaton M = arithmetic(q,r,a,"+");
 			Automaton N = arithmetic(n,b,q,"*");
 
