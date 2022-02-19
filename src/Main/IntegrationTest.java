@@ -744,7 +744,7 @@ public class IntegrationTest {
 		}
 	}
 	public void createTestCases() throws Exception{
-		for(int i = 181; i < 196;i++){
+		for(int i = 0; i < L.size();i++){
 			String command = L.get(i);
 			System.out.println(command);
 			TestCase test_case = null;
