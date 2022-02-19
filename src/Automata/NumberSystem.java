@@ -842,12 +842,12 @@ public class NumberSystem {
 			R.sortLabel();
 		} else { // n > 0
 			String a = "a",b = "b",r = "r",q = "q";
-			//a / n = b <=> Er,q a = q + r & q = n*b & -1 < r < n
+			//a / n = b <=> Er,q a = q + r & q = n*b & 1 <= r < n
 			Automaton M = arithmetic(q,r,a,"+");
 			Automaton N = arithmetic(n,b,q,"*");
 
 			// -1 < r < n
-			Automaton P1 = comparison(r,-1, ">");
+			Automaton P1 = comparison(r,0, ">=");
 			Automaton P2 = comparison(r,n, "<");
 			Automaton P = P1.and(P2,false,null,null);
 
