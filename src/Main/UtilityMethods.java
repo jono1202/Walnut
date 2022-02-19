@@ -35,7 +35,7 @@ public class UtilityMethods {
 	static String ADDRESS_FOR_RESULT = "Result/";
 	static String ADDRESS_FOR_CUSTOM_BASES = "Custom Bases/";
 	static String ADDRESS_FOR_TEST_LIBRARY = "Test Library/";
-	static String ADDRESS_FOR_INTEGRATION_TEST_RESULTS = "Test Results/Integreation Tests/";
+	static String ADDRESS_FOR_INTEGRATION_TEST_RESULTS = "Test Results/Integration Tests/";
 
 	static String PROMPT = "\n[Walnut]$ ";
 
