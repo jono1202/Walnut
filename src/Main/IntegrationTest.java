@@ -533,17 +533,37 @@ public class IntegrationTest {
 		L.add("eval test387 \"#palindrome(lsd_2,RS)\";");
 		L.add("eval test388 \"#palindrome(msd_2,P)\";");
 		L.add("eval test389 \"#border(msd_2,thue)\";");
-		L.add("eval test391 \"#border(msd_fib,fibonacci)\";");
-		L.add("eval test392 \"#border(msd_2,rudin)\";");
-		L.add("eval test393 \"#border(msd_2,paperfolding)\";");
+		L.add("eval test390 \"#border(msd_fib,fibonacci)\";");
+		L.add("eval test391 \"#border(msd_2,rudin)\";");
+		L.add("eval test392 \"#border(msd_2,paperfolding)\";");
 
 		// eval tests based on morphism and image commands
-		L.add("eval test394 \"Ai,j,n (n>=3) => ~$fsrevchk(i,j,n)\";");
-		L.add("eval test395 \"~Ep,n (p>=1) & (Ai (i>=n) => FS[i]=FS[i+p])\";");
-		L.add("eval test396 \"An n>=2 => ~(Ei $gamard6allconj(i,n))\";");
-		L.add("eval test397 \"An n>=3 => ~(Ei $gamard3allconj(i,n))\";");
-		L.add("eval test398 \"Ai WSA[i]=@0 <=> (Ex $power2(x) & (i+2=5*x|i+2=7*x))\";");
+		L.add("eval test393 \"Ai,j,n (n>=3) => ~$fsrevchk(i,j,n)\";");
+		L.add("eval test394 \"~Ep,n (p>=1) & (Ai (i>=n) => FS[i]=FS[i+p])\";");
+		L.add("eval test395 \"An n>=2 => ~(Ei $gamard6allconj(i,n))\";");
+		L.add("eval test396 \"An n>=3 => ~(Ei $gamard3allconj(i,n))\";");
+		L.add("eval test397 \"Ai WSA[i]=@0 <=> (Ex $power2(x) & (i+2=5*x|i+2=7*x))\";");
 
+		// test negative numbers used in non-negative bases
+		L.add("eval test398 \"a + _1 = 0\";");
+		L.add("eval test399 \"a > _1 & a < 1\";");
+		L.add("eval test400 \"a < _1\";");
+		L.add("eval test401 \"_1-b = a\";");
+		L.add("eval test402 \"a + _2*b = 0\";");
+		L.add("eval test403 \"a + b/_2 = 0\";");
+
+		// test negative bases
+		L.add("eval test404 \"?msd_neg_2 a = _5\";");
+		L.add("eval test405 \"?msd_neg_2 a = 5\";");
+		L.add("eval test406 \"?msd_neg_2 a = b/2\";");
+		L.add("eval test407 \"?lsd_neg_2 a = _5\";");
+		L.add("eval test408 \"?lsd_neg_2 a = 5\";");
+		L.add("eval test409 \"?lsd_neg_2 a = b/2\";");
+		L.add("eval test410 \"?msd_neg_2 a = _b/2\";");
+		L.add("eval test411 \"?msd_neg_2 a = b/_5\";");
+		L.add("eval test412 \"?msd_neg_2 a + _5 = _5\";");
+		L.add("eval test413 \"?msd_neg_2 _a + 2 = 0\";");
+		L.add("eval test414 \"?msd_neg_2 _2*_a = 6\";");
 	}
 	public void runPerformanceTest(String name,int numberOfRuns) throws Exception{
 		PrintWriter out = new PrintWriter(new FileOutputStream(new File(directoryAddress+performanceTestFileName), true /* append = true */));
