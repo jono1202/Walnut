@@ -564,6 +564,33 @@ public class IntegrationTest {
 		L.add("eval test412 \"?msd_neg_2 a + _5 = _5\";");
 		L.add("eval test413 \"?msd_neg_2 _a + 2 = 0\";");
 		L.add("eval test414 \"?msd_neg_2 _2*_a = 6\";");
+
+		// negafibonacci
+		L.add("eval test415 \"?msd_neg_fib (a = 4) & (b)=(5) & (6) = c & (17 = d)\";");
+		L.add("eval test416 \"?lsd_neg_fib (a = 4) & (b)=(5) & (6) = c & (17 = d)\";");
+		L.add("eval test417 \"?msd_neg_fib a <= 9 & a!=8 & a <9 & 4 <= a & 6 != a\";");//a = 4,5,7
+		L.add("eval test418 \"?msd_neg_fib ~(a >= 10 | a < 4) & ~(a = 9 | (a<7 & a>=6)) & a != 8\";");//a = 4,5,7
+		L.add("eval test419 \"?lsd_neg_fib ~(a >= 10 | a < 4) & ~(a = 9 | (a<7 & a>=6)) & a != 8\";");//a = 4,5,7
+		L.add("eval test420 \"?msd_neg_fib ((a<=5 & a > 3) | a = 7 | a = 9 | a = 45) & a <= 7\";");//a = 4,5,7
+		L.add("eval test421 \"?lsd_neg_fib ((a<=5 & a > 3) | a = 7 | a = 9 | a = 45) & a <= 7\";");//a = 4,5,7
+		L.add("eval test422 \"?lsd_neg_fib a >= 2 => a<= 3\";");//a <= 3
+		L.add("eval test423 \"?msd_neg_fib a =6 ^ a=6\";");
+		L.add("eval test424 \"?msd_neg_fib a !=6 ^ a=6\";");
+		L.add("eval test425 \"?msd_neg_fib a =6 ^ a<7\";");//a <= 5
+		L.add("eval test426 \"?msd_neg_fib a <=5 <=> ~(a>2)\";");//a <= 2 or a >= 6
+		L.add("eval test427 \"?msd_neg_fib a <=b & a>=b\";");//a = b
+		L.add("eval test428 \"?msd_neg_fib a <=a+1\";");
+		L.add("eval test429 \"?msd_neg_fib a <=a-1\";");
+		L.add("eval test430 \"?msd_neg_fib 2+a < a\";");
+		L.add("eval test431 \"?msd_neg_fib a =3*a\";");
+		L.add("eval test432 \"?msd_neg_fib 5+2*a = 4*a+1\";");
+		L.add("eval test433 \"?lsd_neg_fib Ex,y x < y\";");
+		L.add("eval test434 \"?lsd_neg_fib Ex,y,z y = 2*x+1 & y = 2*z\";");
+		L.add("eval test435 \"?lsd_neg_fib Ex,y,z y = 2*x+1 & y = 3*z\";");
+		L.add("eval test436 \"?lsd_neg_fib Ex,y y = 4*x+1 & y = 11\";");
+		L.add("eval test437 \"?lsd_neg_fib Ex,y y = 4*x+1 & y = 13\";");
+		L.add("eval test438 \"?lsd_neg_fib Ex 13 = 4*x+1\";");
+		L.add("eval test439 \"?lsd_neg_fib Ex 11 = 4*x+1\";");
 	}
 	public void runPerformanceTest(String name,int numberOfRuns) throws Exception{
 		PrintWriter out = new PrintWriter(new FileOutputStream(new File(directoryAddress+performanceTestFileName), true /* append = true */));
