@@ -549,6 +549,21 @@ public class IntegrationTest {
 		L.add("eval test399 \"a > _1 & a < 1\";");
 		L.add("eval test400 \"a < _1\";");
 		L.add("eval test401 \"_1-b = a\";");
+		L.add("eval test402 \"a + _2*b = 0\";");
+		L.add("eval test403 \"a + b/_2 = 0\";");
+
+		// test negative bases
+		L.add("eval test404 \"?msd_neg_2 a = _5\";");
+		L.add("eval test405 \"?msd_neg_2 a = 5\";");
+		L.add("eval test406 \"?msd_neg_2 a = b/2\";");
+		L.add("eval test407 \"?lsd_neg_2 a = _5\";");
+		L.add("eval test408 \"?lsd_neg_2 a = 5\";");
+		L.add("eval test409 \"?lsd_neg_2 a = b/2\";");
+		L.add("eval test410 \"?msd_neg_2 a = _b/2\";");
+		L.add("eval test411 \"?msd_neg_2 a = b/_5\";");
+		L.add("eval test412 \"?msd_neg_2 a + _5 = _5\";");
+		L.add("eval test413 \"?msd_neg_2 _a + 2 = 0\";");
+		L.add("eval test414 \"?msd_neg_2 _2*_a = 6\";");
 	}
 	public void runPerformanceTest(String name,int numberOfRuns) throws Exception{
 		PrintWriter out = new PrintWriter(new FileOutputStream(new File(directoryAddress+performanceTestFileName), true /* append = true */));
