@@ -533,17 +533,22 @@ public class IntegrationTest {
 		L.add("eval test387 \"#palindrome(lsd_2,RS)\";");
 		L.add("eval test388 \"#palindrome(msd_2,P)\";");
 		L.add("eval test389 \"#border(msd_2,thue)\";");
-		L.add("eval test391 \"#border(msd_fib,fibonacci)\";");
-		L.add("eval test392 \"#border(msd_2,rudin)\";");
-		L.add("eval test393 \"#border(msd_2,paperfolding)\";");
+		L.add("eval test390 \"#border(msd_fib,fibonacci)\";");
+		L.add("eval test391 \"#border(msd_2,rudin)\";");
+		L.add("eval test392 \"#border(msd_2,paperfolding)\";");
 
 		// eval tests based on morphism and image commands
-		L.add("eval test394 \"Ai,j,n (n>=3) => ~$fsrevchk(i,j,n)\";");
-		L.add("eval test395 \"~Ep,n (p>=1) & (Ai (i>=n) => FS[i]=FS[i+p])\";");
-		L.add("eval test396 \"An n>=2 => ~(Ei $gamard6allconj(i,n))\";");
-		L.add("eval test397 \"An n>=3 => ~(Ei $gamard3allconj(i,n))\";");
-		L.add("eval test398 \"Ai WSA[i]=@0 <=> (Ex $power2(x) & (i+2=5*x|i+2=7*x))\";");
+		L.add("eval test393 \"Ai,j,n (n>=3) => ~$fsrevchk(i,j,n)\";");
+		L.add("eval test394 \"~Ep,n (p>=1) & (Ai (i>=n) => FS[i]=FS[i+p])\";");
+		L.add("eval test395 \"An n>=2 => ~(Ei $gamard6allconj(i,n))\";");
+		L.add("eval test396 \"An n>=3 => ~(Ei $gamard3allconj(i,n))\";");
+		L.add("eval test397 \"Ai WSA[i]=@0 <=> (Ex $power2(x) & (i+2=5*x|i+2=7*x))\";");
 
+		// test negative numbers used in non-negative bases
+		L.add("eval test398 \"a + _1 = 0\";");
+		L.add("eval test399 \"a > _1 & a < 1\";");
+		L.add("eval test400 \"a < _1\";");
+		L.add("eval test401 \"_1-b = a\";");
 	}
 	public void runPerformanceTest(String name,int numberOfRuns) throws Exception{
 		PrintWriter out = new PrintWriter(new FileOutputStream(new File(directoryAddress+performanceTestFileName), true /* append = true */));
