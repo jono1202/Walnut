@@ -27,6 +27,7 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.Set;
@@ -41,7 +42,7 @@ import Automata.OstrowskiNumeration;
  * @author Hamoon
  */
 public class Prover {
-	static String REGEXP_FOR_THE_LIST_OF_COMMANDS = "(eval|def|macro|reg|load|ost|exit|quit|cls|clear|combine|morphism|promote|image|inf|test)";
+	static String REGEXP_FOR_THE_LIST_OF_COMMANDS = "(eval|def|macro|reg|load|ost|exit|quit|cls|clear|combine|morphism|promote|image|inf|split|test)";
 	static String REGEXP_FOR_EMPTY_COMMAND = "^\\s*(;|::|:)\\s*$";
 	/**
 	 * the high-level scheme of a command is a name followed by some arguments and ending in either ; : or ::
@@ -117,6 +118,14 @@ public class Prover {
 	static String REGEXP_FOR_inf_COMMAND = "^\\s*inf\\s+([a-zA-Z]\\w*)\\s*(;|::|:)\\s*$";
 	static Pattern PATTERN_FOR_inf_COMMAND = Pattern.compile(REGEXP_FOR_inf_COMMAND);
 	static int GROUP_INF_NAME = 1;
+
+	static String REGEXP_FOR_split_COMMAND = "^\\s*split\\s+([a-zA-Z]\\w*)\\s*(;|::|:)\\s*$";
+	static Pattern PATTERN_FOR_split_COMMAND = Pattern.compile(REGEXP_FOR_split_COMMAND);
+	static int GROUP_SPLIT_NAME = 1, GROUP_SPLIT_END = 2;
+
+	static String REGEXP_FOR_join_COMMAND = "^\\s*join\\s+([a-zA-Z]\\w*)\\s+([a-zA-Z]\\w*)\\s+([a-zA-Z]\\w*)\\s*(;|::|:)\\s*$";
+	static Pattern PATTERN_FOR_join_COMMAND = Pattern.compile(REGEXP_FOR_split_COMMAND);
+	static int GROUP_JOIN_NAME = 1, GROUP_JOIN_FIRST = 2, GROUP_JOIN_SECOND = 3, GROUP_JOIN_END = 4;
 
 	static String REGEXP_FOR_test_COMMAND = "^\\s*test\\s+([a-zA-Z]\\w*)\\s*(\\d+)\\s*(;|::|:)\\s*$";
 	static Pattern PATTERN_FOR_test_COMMAND = Pattern.compile(REGEXP_FOR_test_COMMAND);
@@ -284,6 +293,10 @@ public class Prover {
 			imageCommand(s);
 		} else if (commandName.equals("inf")) {
 			infCommand(s);
+		} else if (commandName.equals("split")) {
+			splitCommand(s);
+		} else if (commandName.equals("join")) {
+			joinCommand(s);
 		} else if (commandName.equals("test")) {
 			testCommand(s);
 		} else {
@@ -652,6 +665,47 @@ public class Prover {
 			System.out.println(infReg);
 			return true;
 		}
+	}
+
+	public static boolean splitCommand(String s) throws Exception {
+		Matcher m = PATTERN_FOR_split_COMMAND.matcher(s);
+		if(!m.find()) {
+			throw new Exception("Invalid use of split command.");
+		}
+		Automaton M = new Automaton(UtilityMethods.get_address_for_words_library()+m.group(GROUP_SPLIT_NAME)+".txt");
+
+		boolean printSteps = m.group(GROUP_SPLIT_END).equals(":");
+		boolean printDetails = m.group(GROUP_SPLIT_END).equals("::");
+		String prefix = new String();
+		StringBuffer log = new StringBuffer();
+		List<Automaton> splitAutomata = M.split(printSteps,prefix,log);
+
+		for (int i = 0; i < splitAutomata.size(); i++) {
+			splitAutomata.get(i).draw(UtilityMethods.get_address_for_result()+m.group(GROUP_SPLIT_NAME)+i+".gv", s, true);
+			splitAutomata.get(i).write(UtilityMethods.get_address_for_result()+m.group(GROUP_SPLIT_NAME)+i+".txt");
+			splitAutomata.get(i).write(UtilityMethods.get_address_for_words_library()+m.group(GROUP_SPLIT_NAME)+i+".txt");
+		}
+		return true;
+	}
+
+	public static boolean joinCommand(String s) throws Exception {
+		Matcher m = PATTERN_FOR_join_COMMAND.matcher(s);
+		if(!m.find()) {
+			throw new Exception("Invalid use of join command.");
+		}
+		Automaton M = new Automaton(UtilityMethods.get_address_for_words_library()+m.group(GROUP_JOIN_FIRST)+".txt");
+		Automaton N = new Automaton(UtilityMethods.get_address_for_words_library()+m.group(GROUP_JOIN_SECOND)+".txt");
+
+		boolean printSteps = m.group(GROUP_SPLIT_END).equals(":");
+		boolean printDetails = m.group(GROUP_SPLIT_END).equals("::");
+		String prefix = new String();
+		StringBuffer log = new StringBuffer();
+		M.join(N, printSteps,prefix,log);
+
+		M.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_JOIN_NAME)+".gv", s, true);
+		M.write(UtilityMethods.get_address_for_result()+m.group(GROUP_JOIN_NAME)+".txt");
+		M.write(UtilityMethods.get_address_for_words_library()+m.group(GROUP_JOIN_NAME)+".txt");
+		return true;
 	}
 
 	public static void testCommand(String s) throws Exception {

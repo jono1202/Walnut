@@ -73,16 +73,23 @@ public class NumberSystem {
 	boolean is_msd;
 
 	/**
+	 * is_neg is used to determine whether the base is negative.
+	 */
+	boolean is_neg;
+
+	/**
 	 * Automata for addition, lessThan, and equal<br>
 	 * -addition has three inputs, and it accepts
 	 *  iff the third is the sum of the first two. So the input is ordered!<br>
 	 * -lessThan has two inputs, and it accepts iff the first
 	 * one is less than the second one. So the input is ordered!<br>
 	 * -equal has two inputs, and it accepts iff they are equal.
+	 * -comparison has two inputs, TODO.
 	 */
 	public Automaton addition;
 	public Automaton lessThan;
 	public Automaton equality;
+	public Automaton comparison_neg;
 	public Automaton allRepresentations;
 
 	/**
@@ -119,6 +126,7 @@ public class NumberSystem {
 		this.name = name;
 		String msd_or_lsd = name.substring(0, name.indexOf("_"));
 		is_msd = msd_or_lsd.equals("msd");
+		is_neg = name.contains("neg");
 		String base = name.substring(name.indexOf("_") + 1);
 
 		/**
@@ -221,6 +229,10 @@ public class NumberSystem {
 
 		setEquality(addition.A.get(0));
 
+		//comparison with negative base
+		if(UtilityMethods.parseNegNumber(base) > 1) {
+			comparison_neg = base_n_neg_compare(UtilityMethods.parseNegNumber(base));
+		}
 
 		//the set of all representations
 		if(new File(addressForTheSetOfAllRepresentations).isFile()) {
@@ -491,6 +503,77 @@ public class NumberSystem {
 		if(!is_msd) {
 			lessThan.reverse(false,null,null);
 		}
+	}
+
+	/**
+	 * Initializes equality of base n and base -n. Equality has two inputs (a,b), and it accepts
+	 * iff [a]_n = [b]_-n (a is a base 2 representation and b is a base -2 representation of
+	 * the same integer).
+	 * @param n
+	 * @throws Exception
+	 */
+	private Automaton base_n_neg_compare(int n) throws Exception{
+		List<Integer> alphabet = new ArrayList<Integer>();
+		for(int i = 0 ; i < n;i++)alphabet.add(i);
+		Automaton compare = new Automaton();
+		compare.Q = 4;
+		compare.q0 = 0;
+		compare.O.add(1);compare.O.add(1);compare.O.add(0);compare.O.add(0);
+		compare.d.add(new TreeMap<Integer,List<Integer>>());
+		compare.d.add(new TreeMap<Integer,List<Integer>>());
+		compare.d.add(new TreeMap<Integer,List<Integer>>());
+		compare.d.add(new TreeMap<Integer,List<Integer>>());
+		if(is_msd) {
+			compare.NS.add(new NumberSystem("msd_"+n));
+			compare.NS.add(this);
+		} else {
+			compare.NS.add(new NumberSystem("lsd_"+n));
+			compare.NS.add(this);
+		}
+		compare.A.add(new ArrayList<Integer>(alphabet));
+		compare.A.add(alphabet);
+		compare.alphabetSize = alphabet.size() * alphabet.size();
+		int l = 0;
+		for(int j = 0; j < n;j++){
+			for(int i = 0 ; i < n;i++){
+				if(i == 0 && j == 0){
+					List<Integer> dest = new ArrayList<Integer>();
+					dest.add(0);
+					compare.d.get(1).put(l,dest);
+				}
+				if(i == j){
+					List<Integer> dest = new ArrayList<Integer>();
+					dest.add(1);
+					compare.d.get(0).put(l,dest);
+				}
+				if(i+1 == j){
+					List<Integer> dest = new ArrayList<Integer>();
+					dest.add(1);
+					compare.d.get(2).put(l,dest);
+				}
+				if(i+j == n){
+					List<Integer> dest = new ArrayList<Integer>();
+					dest.add(2);
+					compare.d.get(1).put(l,dest);
+				}
+				if(i+j == n-1){
+					List<Integer> dest = new ArrayList<Integer>();
+					dest.add(2);
+					compare.d.get(3).put(l,dest);
+				}
+				if(i == n-1 && j == 0){
+					List<Integer> dest = new ArrayList<Integer>();
+					dest.add(3);
+					compare.d.get(2).put(l,dest);
+				}
+				l++;
+			}
+		}
+
+		if(is_msd) {
+			compare.reverse(false,null,null);
+		}
+		return compare;
 	}
 
 	/**

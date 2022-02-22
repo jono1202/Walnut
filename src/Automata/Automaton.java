@@ -1403,6 +1403,46 @@ public class Automaton {
         return "";
     }
 
+    public List<Automaton> split(boolean print, String prefix, StringBuffer log) throws Exception {
+        List<Automaton> splitAutomata = new ArrayList<Automaton>();
+        if(alphabetSize == 0) {
+            throw new Exception("Cannot split automaton with no inputs.");
+        }
+        int compareIndex = -1;
+        for(int i = 0; i < NS.size(); i++) {
+            if (NS.get(i).comparison_neg != null) {
+                compareIndex = i;
+                break;
+            }
+        }
+        if(compareIndex == -1) {
+            throw new Exception("Cannot split automaton which has no negative base inputs.");
+        }
+        randomLabel();
+        String a = label.get(compareIndex);
+        String b = a+a, c = a+b;
+        Automaton compare = NS.get(compareIndex).comparison_neg.clone();
+
+        compare.bind(b, a);
+        Automaton M = and(compare, print, prefix, log);
+        M.quantify(a, print, prefix, log);
+        M.unlabel();
+        splitAutomata.add(M);
+
+        compare.bind(b, c);
+        Automaton N = and(compare, print, prefix, log);
+        N = N.and(NS.get(compareIndex).arithmetic(a,c,0,"+"), print, prefix, log);
+        N.quantify(a, c, false, print, prefix, log);
+        N.unlabel();
+        splitAutomata.add(N);
+
+        return splitAutomata;
+    }
+
+    public void join(Automaton N, boolean print, String prefix, StringBuffer log) throws Exception {
+        // TODO
+    }
+
     // helper function for inf, finds an input string that leads from q0 to the specified state
     private String constructPrefix(Integer target) {
         List<Integer> distance = new ArrayList<Integer>(Collections.nCopies(Q, -1));
@@ -1847,6 +1887,10 @@ public class Automaton {
         } catch (UnsupportedEncodingException e2) {
             e2.printStackTrace();
         }
+    }
+
+    public void debug_draw(String filename) throws Exception {
+        draw(UtilityMethods.get_address_for_result()+filename+".gv","???", false);
     }
 
     /**
