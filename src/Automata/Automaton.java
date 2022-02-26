@@ -1403,44 +1403,112 @@ public class Automaton {
         return "";
     }
 
-    public List<Automaton> split(boolean print, String prefix, StringBuffer log) throws Exception {
-        List<Automaton> splitAutomata = new ArrayList<Automaton>();
+    public Automaton split(List<String> inputs, boolean print, String prefix, StringBuffer log) throws Exception {
         if(alphabetSize == 0) {
             throw new Exception("Cannot split automaton with no inputs.");
         }
-        int compareIndex = -1;
-        for(int i = 0; i < NS.size(); i++) {
-            if (NS.get(i).comparison_neg != null) {
-                compareIndex = i;
-                break;
+        if(inputs.size() != A.size()) {
+            throw new Exception("Split automaton has incorrect number of inputs.");
+        }
+
+        Automaton M = clone();
+        Set<String> quantifiers = new HashSet<String>();
+        // We label M [b0,b1,...,b(A.size()-1)]
+        if(M.label == null)M.label = new ArrayList<String>();
+        else if(M.label.size() > 0)M.label = new ArrayList<String>();
+        for(int i = 0 ; i < A.size();i++){
+            M.label.add("b" + i);
+        }
+        for(int i = 0; i < inputs.size(); i++) {
+            if (!inputs.get(i).equals("")) {
+                if (NS.get(i) == null)
+                    throw new Exception("Number system for input must be defined.");
+                NumberSystem negativeNumberSystem;
+                if (!NS.get(i).is_neg) {
+                    try {
+                        negativeNumberSystem = NS.get(i).negative_number_system();
+                    } catch (Exception e) {
+                        throw new Exception("Negative number system for " + NS.get(i) + " must be defined");
+                    }
+                } else {
+                    negativeNumberSystem = NS.get(i);
+                }
+                if (negativeNumberSystem.comparison_neg == null) {
+                    throw new Exception("Number systems " + NS.get(i) + " and " + negativeNumberSystem + " cannot be compared.");
+                }
+
+                Automaton compare = negativeNumberSystem.comparison_neg.clone();
+                String a = Integer.toString(i), b = "b"+i, c = "c"+i;
+                if (inputs.get(i).equals("+")) {
+                    compare.bind(a, b);
+                    M = M.and(compare, print, prefix, log);
+                    quantifiers.add(b);
+                } else { // inputs.get(i).equals("-")
+                    compare.bind(a, c);
+                    M = M.and(compare, print, prefix, log);
+                    M = M.and(negativeNumberSystem.arithmetic(b,c,0,"+"), print, prefix, log);
+                    quantifiers.add(b); quantifiers.add(c);
+                }
             }
         }
-        if(compareIndex == -1) {
-            throw new Exception("Cannot split automaton which has no negative base inputs.");
-        }
-        randomLabel();
-        String a = label.get(compareIndex);
-        String b = a+a, c = a+b;
-        Automaton compare = NS.get(compareIndex).comparison_neg.clone();
-
-        compare.bind(b, a);
-        Automaton M = and(compare, print, prefix, log);
-        M.quantify(a, print, prefix, log);
-        M.unlabel();
-        splitAutomata.add(M);
-
-        compare.bind(b, c);
-        Automaton N = and(compare, print, prefix, log);
-        N = N.and(NS.get(compareIndex).arithmetic(a,c,0,"+"), print, prefix, log);
-        N.quantify(a, c, false, print, prefix, log);
-        N.unlabel();
-        splitAutomata.add(N);
-
-        return splitAutomata;
+        M.quantify(quantifiers, print, prefix, log);
+        M.sortLabel();
+        M.randomLabel();
+        return M;
     }
 
-    public void join(Automaton N, boolean print, String prefix, StringBuffer log) throws Exception {
-        // TODO
+    public Automaton join(List<String> inputs, boolean print, String prefix, StringBuffer log) throws Exception {
+        if(alphabetSize == 0) {
+            throw new Exception("Cannot join automaton with no inputs.");
+        }
+        if(inputs.size() != A.size()) {
+            throw new Exception("Join automaton has incorrect number of inputs.");
+        }
+
+        Automaton M = clone();
+        Set<String> quantifiers = new HashSet<String>();
+        // We label M [b0,b1,...,b(A.size()-1)]
+        if(M.label == null)M.label = new ArrayList<String>();
+        else if(M.label.size() > 0)M.label = new ArrayList<String>();
+        for(int i = 0 ; i < A.size();i++){
+            M.label.add("b" + i);
+        }
+        for(int i = 0; i < inputs.size(); i++) {
+            if (!inputs.get(i).equals("")) {
+                if (NS.get(i) == null)
+                    throw new Exception("Number system for input must be defined.");
+                NumberSystem negativeNumberSystem;
+                if (!NS.get(i).is_neg) {
+                    try {
+                        negativeNumberSystem = NS.get(i).negative_number_system();
+                    } catch (Exception e) {
+                        throw new Exception("Negative number system for " + NS.get(i) + " must be defined");
+                    }
+                } else {
+                    negativeNumberSystem = NS.get(i);
+                }
+                if (negativeNumberSystem.comparison_neg == null) {
+                    throw new Exception("Number systems " + NS.get(i) + " and " + negativeNumberSystem + " cannot be compared.");
+                }
+
+                Automaton compare = negativeNumberSystem.comparison_neg.clone();
+                String a = Integer.toString(i), b = "b"+i, c = "c"+i;
+                if (inputs.get(i).equals("+")) {
+                    compare.bind(b, a);
+                    M = M.and(compare, print, prefix, log);
+                    quantifiers.add(b);
+                } else { // inputs.get(i).equals("-")
+                    compare.bind(b, c);
+                    M = M.and(compare, print, prefix, log);
+                    M = M.and(negativeNumberSystem.arithmetic(a,c,0,"+"), print, prefix, log);
+                    quantifiers.add(b); quantifiers.add(c);
+                }
+            }
+        }
+        M.quantify(quantifiers, print, prefix, log);
+        M.sortLabel();
+        M.randomLabel();
+        return M;
     }
 
     // helper function for inf, finds an input string that leads from q0 to the specified state

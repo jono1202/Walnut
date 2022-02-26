@@ -42,7 +42,7 @@ import Automata.OstrowskiNumeration;
  * @author Hamoon
  */
 public class Prover {
-	static String REGEXP_FOR_THE_LIST_OF_COMMANDS = "(eval|def|macro|reg|load|ost|exit|quit|cls|clear|combine|morphism|promote|image|inf|split|test)";
+	static String REGEXP_FOR_THE_LIST_OF_COMMANDS = "(eval|def|macro|reg|load|ost|exit|quit|cls|clear|combine|morphism|promote|image|inf|split|join|test)";
 	static String REGEXP_FOR_EMPTY_COMMAND = "^\\s*(;|::|:)\\s*$";
 	/**
 	 * the high-level scheme of a command is a name followed by some arguments and ending in either ; : or ::
@@ -119,13 +119,17 @@ public class Prover {
 	static Pattern PATTERN_FOR_inf_COMMAND = Pattern.compile(REGEXP_FOR_inf_COMMAND);
 	static int GROUP_INF_NAME = 1;
 
-	static String REGEXP_FOR_split_COMMAND = "^\\s*split\\s+([a-zA-Z]\\w*)\\s*(;|::|:)\\s*$";
+	static String REGEXP_FOR_split_COMMAND = "^\\s*split\\s+([a-zA-Z]\\w*)\\s+([a-zA-Z]\\w*)\\[(\\s*([+-]?\\s*,\\s*)*)([+-]?)\\s*]\\s*(;|::|:)\\s*$";
 	static Pattern PATTERN_FOR_split_COMMAND = Pattern.compile(REGEXP_FOR_split_COMMAND);
-	static int GROUP_SPLIT_NAME = 1, GROUP_SPLIT_END = 2;
+	static int GROUP_SPLIT_NAME = 1, GROUP_SPLIT_AUTOMATA = 2, GROUP_SPLIT_INPUT = 3, GROUP_SPLIT_FINAL_INPUT = 5, GROUP_SPLIT_END = 6;
+	static String REGEXP_FOR_INPUT_IN_split_COMMAND = "([+-]?)\\s*,\\s*";
+	static Pattern PATTERN_FOR_INPUT_IN_split_COMMAND = Pattern.compile(REGEXP_FOR_INPUT_IN_split_COMMAND);
 
-	static String REGEXP_FOR_join_COMMAND = "^\\s*join\\s+([a-zA-Z]\\w*)\\s+([a-zA-Z]\\w*)\\s+([a-zA-Z]\\w*)\\s*(;|::|:)\\s*$";
-	static Pattern PATTERN_FOR_join_COMMAND = Pattern.compile(REGEXP_FOR_split_COMMAND);
-	static int GROUP_JOIN_NAME = 1, GROUP_JOIN_FIRST = 2, GROUP_JOIN_SECOND = 3, GROUP_JOIN_END = 4;
+	static String REGEXP_FOR_join_COMMAND = "^\\s*join\\s+([a-zA-Z]\\w*)\\[(\\s*([+-]?\\s*,\\s*)*)([+-]?)\\s*]\\s+([a-zA-Z]\\w*)\\s*(;|::|:)\\s*$";
+	static Pattern PATTERN_FOR_join_COMMAND = Pattern.compile(REGEXP_FOR_join_COMMAND);
+	static int GROUP_JOIN_NAME = 1, GROUP_JOIN_AUTOMATA = 5, GROUP_JOIN_INPUT = 2, GROUP_JOIN_FINAL_INPUT = 4, GROUP_JOIN_END = 6;
+	static String REGEXP_FOR_INPUT_IN_join_COMMAND = "([+-]?)\\s*,\\s*";
+	static Pattern PATTERN_FOR_INPUT_IN_join_COMMAND = Pattern.compile(REGEXP_FOR_INPUT_IN_join_COMMAND);
 
 	static String REGEXP_FOR_test_COMMAND = "^\\s*test\\s+([a-zA-Z]\\w*)\\s*(\\d+)\\s*(;|::|:)\\s*$";
 	static Pattern PATTERN_FOR_test_COMMAND = Pattern.compile(REGEXP_FOR_test_COMMAND);
@@ -672,19 +676,30 @@ public class Prover {
 		if(!m.find()) {
 			throw new Exception("Invalid use of split command.");
 		}
-		Automaton M = new Automaton(UtilityMethods.get_address_for_words_library()+m.group(GROUP_SPLIT_NAME)+".txt");
+		Automaton M = new Automaton(UtilityMethods.get_address_for_words_library()+m.group(GROUP_SPLIT_AUTOMATA)+".txt");
 
 		boolean printSteps = m.group(GROUP_SPLIT_END).equals(":");
 		boolean printDetails = m.group(GROUP_SPLIT_END).equals("::");
 		String prefix = new String();
 		StringBuffer log = new StringBuffer();
-		List<Automaton> splitAutomata = M.split(printSteps,prefix,log);
 
-		for (int i = 0; i < splitAutomata.size(); i++) {
-			splitAutomata.get(i).draw(UtilityMethods.get_address_for_result()+m.group(GROUP_SPLIT_NAME)+i+".gv", s, true);
-			splitAutomata.get(i).write(UtilityMethods.get_address_for_result()+m.group(GROUP_SPLIT_NAME)+i+".txt");
-			splitAutomata.get(i).write(UtilityMethods.get_address_for_words_library()+m.group(GROUP_SPLIT_NAME)+i+".txt");
+		Matcher m1 = PATTERN_FOR_INPUT_IN_split_COMMAND.matcher(m.group(GROUP_SPLIT_INPUT));
+		List<String> inputs = new ArrayList<String>();
+		boolean doesSplit = false;
+		while(m1.find()) {
+			String t = m1.group(1);
+			doesSplit = doesSplit || t.equals("+") || t.equals("-");
+			inputs.add(t);
 		}
+		if((!doesSplit || inputs.size() == 0) && m.group(GROUP_SPLIT_FINAL_INPUT).equals("")) {
+			throw new Exception("Cannot split without inputs.");
+		}
+		inputs.add(m.group(GROUP_SPLIT_FINAL_INPUT));
+		Automaton N = M.split(inputs,printSteps,prefix,log);
+
+		N.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_SPLIT_NAME)+".gv", s, true);
+		N.write(UtilityMethods.get_address_for_result()+m.group(GROUP_SPLIT_NAME)+".txt");
+		N.write(UtilityMethods.get_address_for_words_library()+m.group(GROUP_SPLIT_NAME)+".txt");
 		return true;
 	}
 
@@ -693,18 +708,30 @@ public class Prover {
 		if(!m.find()) {
 			throw new Exception("Invalid use of join command.");
 		}
-		Automaton M = new Automaton(UtilityMethods.get_address_for_words_library()+m.group(GROUP_JOIN_FIRST)+".txt");
-		Automaton N = new Automaton(UtilityMethods.get_address_for_words_library()+m.group(GROUP_JOIN_SECOND)+".txt");
+		Automaton M = new Automaton(UtilityMethods.get_address_for_words_library()+m.group(GROUP_JOIN_AUTOMATA)+".txt");
 
-		boolean printSteps = m.group(GROUP_SPLIT_END).equals(":");
-		boolean printDetails = m.group(GROUP_SPLIT_END).equals("::");
+		boolean printSteps = m.group(GROUP_JOIN_END).equals(":");
+		boolean printDetails = m.group(GROUP_JOIN_END).equals("::");
 		String prefix = new String();
 		StringBuffer log = new StringBuffer();
-		M.join(N, printSteps,prefix,log);
 
-		M.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_JOIN_NAME)+".gv", s, true);
-		M.write(UtilityMethods.get_address_for_result()+m.group(GROUP_JOIN_NAME)+".txt");
-		M.write(UtilityMethods.get_address_for_words_library()+m.group(GROUP_JOIN_NAME)+".txt");
+		Matcher m1 = PATTERN_FOR_INPUT_IN_join_COMMAND.matcher(m.group(GROUP_JOIN_INPUT));
+		List<String> inputs = new ArrayList<String>();
+		boolean doesSplit = false;
+		while(m1.find()) {
+			String t = m1.group(1);
+			doesSplit = doesSplit || t.equals("+") || t.equals("-");
+			inputs.add(t);
+		}
+		if((!doesSplit || inputs.size() == 0) && m.group(GROUP_JOIN_FINAL_INPUT).equals("")) {
+			throw new Exception("Cannot join without inputs.");
+		}
+		inputs.add(m.group(GROUP_JOIN_FINAL_INPUT));
+		Automaton N = M.join(inputs,printSteps,prefix,log);
+
+		N.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_JOIN_NAME)+".gv", s, true);
+		N.write(UtilityMethods.get_address_for_result()+m.group(GROUP_JOIN_NAME)+".txt");
+		N.write(UtilityMethods.get_address_for_words_library()+m.group(GROUP_JOIN_NAME)+".txt");
 		return true;
 	}
 

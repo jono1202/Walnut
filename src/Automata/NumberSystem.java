@@ -19,6 +19,7 @@
 package Automata;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -130,7 +131,7 @@ public class NumberSystem {
 		String base = name.substring(name.indexOf("_") + 1);
 
 		/**
-		 * When the number system does not exits, we try to see whether its complement exists or not.
+		 * When the number system does not exist, we try to see whether its complement exists or not.
 		 * For example lsd_2 is the complement of msd_2.
 		 */
 		String complementName = (is_msd ? "lsd":"msd")+"_" + base;
@@ -512,17 +513,20 @@ public class NumberSystem {
 	 * @param n
 	 * @throws Exception
 	 */
-	private Automaton base_n_neg_compare(int n) throws Exception{
+	private Automaton base_n_neg_compare(int n) throws Exception {
 		List<Integer> alphabet = new ArrayList<Integer>();
-		for(int i = 0 ; i < n;i++)alphabet.add(i);
+		for (int i = 0; i < n; i++) alphabet.add(i);
 		Automaton compare = new Automaton();
 		compare.Q = 4;
 		compare.q0 = 0;
-		compare.O.add(1);compare.O.add(1);compare.O.add(0);compare.O.add(0);
-		compare.d.add(new TreeMap<Integer,List<Integer>>());
-		compare.d.add(new TreeMap<Integer,List<Integer>>());
-		compare.d.add(new TreeMap<Integer,List<Integer>>());
-		compare.d.add(new TreeMap<Integer,List<Integer>>());
+		compare.O.add(1);
+		compare.O.add(1);
+		compare.O.add(0);
+		compare.O.add(0);
+		compare.d.add(new TreeMap<Integer, List<Integer>>());
+		compare.d.add(new TreeMap<Integer, List<Integer>>());
+		compare.d.add(new TreeMap<Integer, List<Integer>>());
+		compare.d.add(new TreeMap<Integer, List<Integer>>());
 		if(is_msd) {
 			compare.NS.add(new NumberSystem("msd_"+n));
 			compare.NS.add(this);
@@ -574,6 +578,15 @@ public class NumberSystem {
 			compare.reverse(false,null,null);
 		}
 		return compare;
+	}
+
+	/**
+	 * Gives the corresponding negative number system if one is defined. Throws an exception otherwise.
+	 */
+	public NumberSystem negative_number_system() throws Exception {
+		String msd_or_lsd = name.substring(0, name.indexOf("_"));
+		String base = name.substring(name.indexOf("_") + 1);
+		return new NumberSystem(msd_or_lsd + "_neg_" + base);
 	}
 
 	/**
