@@ -1352,7 +1352,12 @@ public class Automaton {
         first.combineOutputs = outputs;
         while (subautomata.size() > 0) {
             Automaton next = subautomata.remove();
-            // potentially add logging later
+            long timeBefore = System.currentTimeMillis();
+            if(print){
+                String msg = prefix + "computing =>:" + first.Q + " states - " + next.Q + " states";
+                log.append(msg + UtilityMethods.newLine());
+                System.out.println(msg);
+            }
 
             // crossProduct requires labelling so we make an arbitrary labelling and use it for both: this is valid since
             // input alphabets and arities are assumed to be identical for the combine method
@@ -1365,6 +1370,13 @@ public class Automaton {
             product.combineIndex = first.combineIndex + 1;
             product.combineOutputs = first.combineOutputs;
             first = product;
+
+            long timeAfter = System.currentTimeMillis();
+            if(print){
+                String msg = prefix + "computed =>:" + first.Q + " states - "+(timeAfter-timeBefore)+"ms";
+                log.append(msg + UtilityMethods.newLine());
+                System.out.println(msg);
+            }
         }
         return first;
     }
@@ -1588,7 +1600,7 @@ public class Automaton {
      * @param subautomata A queue of automaton which we will "join" with the current automaton.
      * @return The cross product of the current automaton and automaton in subautomata, using the operation "first" on the outputs.
      * For sake of example, the current Automaton is M1, and subautomata consists of M2 and M3.
-     * Then on input x, returned automaton should output the first value of [ M1(x), M2(x), M3(x) ] which is non-zero.
+     * Then on input x, returned automaton should output the first non-zero value of [ M1(x), M2(x), M3(x) ].
      * @throws Exception
      */
     public Automaton join(Queue<Automaton> subautomata, boolean print, String prefix, StringBuffer log) throws Exception {
@@ -1596,13 +1608,25 @@ public class Automaton {
 
         while (subautomata.size() > 0) {
             Automaton next = subautomata.remove();
-            // potentially add logging later
+            long timeBefore = System.currentTimeMillis();
+            if(print){
+                String msg = prefix + "computing =>:" + first.Q + " states - " + next.Q + " states";
+                log.append(msg + UtilityMethods.newLine());
+                System.out.println(msg);
+            }
 
             // crossProduct requires both automata to be totalized, otherwise it has no idea which cartesian states to transition to
             first.totalize(print,prefix+" ",log);
             next.totalize(print,prefix+" ",log);
             first = first.crossProduct(next, "first", print, prefix, log);
             first = first.minimizeWithOuput(print,prefix,log);
+
+            long timeAfter = System.currentTimeMillis();
+            if(print){
+                String msg = prefix + "computed =>:" + first.Q + " states - "+(timeAfter-timeBefore)+"ms";
+                log.append(msg + UtilityMethods.newLine());
+                System.out.println(msg);
+            }
         }
         return first;
     }
