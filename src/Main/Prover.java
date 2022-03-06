@@ -40,7 +40,7 @@ import Automata.OstrowskiNumeration;
  * @author Hamoon
  */
 public class Prover {
-	static String REGEXP_FOR_THE_LIST_OF_COMMANDS = "(eval|def|macro|reg|load|ost|exit|quit|cls|clear|combine|morphism|promote|image|inf|split|rsplit|test)";
+	static String REGEXP_FOR_THE_LIST_OF_COMMANDS = "(eval|def|macro|reg|load|ost|exit|quit|cls|clear|combine|morphism|promote|image|inf|split|rsplit|join|test)";
 	static String REGEXP_FOR_EMPTY_COMMAND = "^\\s*(;|::|:)\\s*$";
 	/**
 	 * the high-level scheme of a command is a name followed by some arguments and ending in either ; : or ::
@@ -117,19 +117,26 @@ public class Prover {
 	static Pattern PATTERN_FOR_inf_COMMAND = Pattern.compile(REGEXP_FOR_inf_COMMAND);
 	static int GROUP_INF_NAME = 1;
 
-	static String REGEXP_FOR_split_COMMAND = "^\\s*split\\s+([a-zA-Z]\\w*)\\s+([a-zA-Z]\\w*)\\[(\\s*([+-]?\\s*,\\s*)*)([+-]?)\\s*]\\s*(;|::|:)\\s*$";
+	static String REGEXP_FOR_split_COMMAND = "^\\s*split\\s+([a-zA-Z]\\w*)\\s+([a-zA-Z]\\w*)((\\s*\\[\\s*[+-]?\\s*])+)\\s*(;|::|:)\\s*$";
 	static Pattern PATTERN_FOR_split_COMMAND = Pattern.compile(REGEXP_FOR_split_COMMAND);
-	static int GROUP_SPLIT_NAME = 1, GROUP_SPLIT_AUTOMATA = 2, GROUP_SPLIT_INPUT = 3, GROUP_SPLIT_FINAL_INPUT = 5, GROUP_SPLIT_END = 6;
-	static String REGEXP_FOR_INPUT_IN_split_COMMAND = "([+-]?)\\s*,\\s*";
+	static int GROUP_SPLIT_NAME = 1, GROUP_SPLIT_AUTOMATA = 2, GROUP_SPLIT_INPUT = 3, GROUP_SPLIT_END = 5;
+	static String REGEXP_FOR_INPUT_IN_split_COMMAND = "\\[\\s*([+-]?)\\s*]";
 	static Pattern PATTERN_FOR_INPUT_IN_split_COMMAND = Pattern.compile(REGEXP_FOR_INPUT_IN_split_COMMAND);
 
-	static String REGEXP_FOR_rsplit_COMMAND = "^\\s*rsplit\\s+([a-zA-Z]\\w*)\\[(\\s*([+-]?\\s*,\\s*)*)([+-]?)\\s*]\\s+([a-zA-Z]\\w*)\\s*(;|::|:)\\s*$";
+	static String REGEXP_FOR_rsplit_COMMAND = "^\\s*rsplit\\s+([a-zA-Z]\\w*)((\\s*\\[\\s*[+-]?\\s*])+)\\s+([a-zA-Z]\\w*)\\s*(;|::|:)\\s*$";
 	static Pattern PATTERN_FOR_rsplit_COMMAND = Pattern.compile(REGEXP_FOR_rsplit_COMMAND);
-	static int GROUP_RSPLIT_NAME = 1, GROUP_RSPLIT_AUTOMATA = 5, GROUP_RSPLIT_INPUT = 2, GROUP_RSPLIT_FINAL_INPUT = 4, GROUP_RSPLIT_END = 6;
-	static String REGEXP_FOR_INPUT_IN_rsplit_COMMAND = "([+-]?)\\s*,\\s*";
+	static int GROUP_RSPLIT_NAME = 1, GROUP_RSPLIT_AUTOMATA = 4, GROUP_RSPLIT_INPUT = 2, GROUP_RSPLIT_END = 5;
+	static String REGEXP_FOR_INPUT_IN_rsplit_COMMAND = "\\[\\s*([+-]?)\\s*]";
 	static Pattern PATTERN_FOR_INPUT_IN_rsplit_COMMAND = Pattern.compile(REGEXP_FOR_INPUT_IN_rsplit_COMMAND);
 
-	static String REGEXP_FOR_join_COMMAND = "^\\s*rsplit\\s+([a-zA-Z]\\w*)\\[(\\s*([+-]?\\s*,\\s*)*)([+-]?)\\s*]\\s+([a-zA-Z]\\w*)\\s*(;|::|:)\\s*$";
+	static String REGEXP_FOR_join_COMMAND = "^\\s*join\\s+([a-zA-Z]\\w*)((\\s+([a-zA-Z]\\w*)((\\s*\\[\\s*[a-zA-Z]\\s*])+))*)\\s*(;|::|:)\\s*";
+	static Pattern PATTERN_FOR_join_COMMAND = Pattern.compile(REGEXP_FOR_join_COMMAND);
+	static int GROUP_JOIN_NAME = 1, GROUP_JOIN_AUTOMATA = 2, GROUP_JOIN_END = 7;
+	static String REGEXP_FOR_AN_AUTOMATON_IN_join_COMMAND = "([a-zA-Z]\\w*)((\\s*\\[\\s*[a-zA-Z]\\s*])+)";
+	static Pattern PATTERN_FOR_AN_AUTOMATON_IN_join_COMMAND = Pattern.compile(REGEXP_FOR_AN_AUTOMATON_IN_join_COMMAND);
+	static int GROUP_JOIN_AUTOMATON_NAME = 1, GROUP_JOIN_AUTOMATON_INPUT = 2;
+	static String REGEXP_FOR_AN_AUTOMATON_INPUT_IN_join_COMMAND = "\\[\\s*([a-zA-Z])\\s*]";
+	static Pattern PATTERN_FOR_AN_AUTOMATON_INPUT_IN_join_COMMAND = Pattern.compile(REGEXP_FOR_AN_AUTOMATON_INPUT_IN_join_COMMAND);
 
 	static String REGEXP_FOR_test_COMMAND = "^\\s*test\\s+([a-zA-Z]\\w*)\\s*(\\d+)\\s*(;|::|:)\\s*$";
 	static Pattern PATTERN_FOR_test_COMMAND = Pattern.compile(REGEXP_FOR_test_COMMAND);
@@ -301,6 +308,8 @@ public class Prover {
 			splitCommand(s);
 		} else if (commandName.equals("rsplit")) {
 			rsplitCommand(s);
+		} else if (commandName.equals("join")) {
+			joinCommand(s);
 		} else if (commandName.equals("test")) {
 			testCommand(s);
 		} else {
@@ -339,6 +348,12 @@ public class Prover {
 			return promoteCommand(s);
 		} else if(commandName.equals("image")) {
 			return imageCommand(s);
+		} else if (commandName.equals("split")) {
+			return splitCommand(s);
+		} else if (commandName.equals("rsplit")) {
+			return rsplitCommand(s);
+		} else if (commandName.equals("join")) {
+			return joinCommand(s);
 		} else {
 			throw new Exception("Invalid command: " + commandName);
 		}
@@ -671,7 +686,7 @@ public class Prover {
 		}
 	}
 
-	public static boolean splitCommand(String s) throws Exception {
+	public static TestCase splitCommand(String s) throws Exception {
 		Matcher m = PATTERN_FOR_split_COMMAND.matcher(s);
 		if(!m.find()) {
 			throw new Exception("Invalid use of split command.");
@@ -684,20 +699,19 @@ public class Prover {
 		StringBuffer log = new StringBuffer();
 
 		Matcher m1 = PATTERN_FOR_INPUT_IN_split_COMMAND.matcher(m.group(GROUP_SPLIT_INPUT));
-		List<String> inputs = new ArrayList<String>();
-		boolean doesSplit = false;
+		List<String> inputs = new ArrayList<>();
+		boolean hasInput = false;
 		while(m1.find()) {
 			String t = m1.group(1);
-			doesSplit = doesSplit || t.equals("+") || t.equals("-");
+			hasInput = hasInput || t.equals("+") || t.equals("-");
 			inputs.add(t);
 		}
-		if((!doesSplit || inputs.size() == 0) && m.group(GROUP_SPLIT_FINAL_INPUT).equals("")) {
+		if(!hasInput || inputs.size() == 0) {
 			throw new Exception("Cannot split without inputs.");
 		}
-		inputs.add(m.group(GROUP_SPLIT_FINAL_INPUT));
 		List<Integer> outputs = new ArrayList<>(M.O);
 		UtilityMethods.removeDuplicates(outputs);
-		List<Automaton> subautomata = M.clone().uncombine(outputs,printSteps,prefix,log);
+		List<Automaton> subautomata = M.uncombine(outputs,printSteps,prefix,log);
 		for (int i = 0; i < subautomata.size(); i++) {
 			Automaton N = subautomata.get(i).split(inputs,printSteps,prefix,log);
 			subautomata.set(i, N);
@@ -708,10 +722,10 @@ public class Prover {
 		N.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_SPLIT_NAME)+".gv", s, true);
 		N.write(UtilityMethods.get_address_for_result()+m.group(GROUP_SPLIT_NAME)+".txt");
 		N.write(UtilityMethods.get_address_for_words_library()+m.group(GROUP_SPLIT_NAME)+".txt");
-		return true;
+		return new TestCase(s, N, "", "", "");
 	}
 
-	public static boolean rsplitCommand(String s) throws Exception {
+	public static TestCase rsplitCommand(String s) throws Exception {
 		Matcher m = PATTERN_FOR_rsplit_COMMAND.matcher(s);
 		if(!m.find()) {
 			throw new Exception("Invalid use of reverse split command.");
@@ -724,20 +738,19 @@ public class Prover {
 		StringBuffer log = new StringBuffer();
 
 		Matcher m1 = PATTERN_FOR_INPUT_IN_rsplit_COMMAND.matcher(m.group(GROUP_RSPLIT_INPUT));
-		List<String> inputs = new ArrayList<String>();
-		boolean doesSplit = false;
+		List<String> inputs = new ArrayList<>();
+		boolean hasInput = false;
 		while(m1.find()) {
 			String t = m1.group(1);
-			doesSplit = doesSplit || t.equals("+") || t.equals("-");
+			hasInput = hasInput || t.equals("+") || t.equals("-");
 			inputs.add(t);
 		}
-		if((!doesSplit || inputs.size() == 0) && m.group(GROUP_RSPLIT_FINAL_INPUT).equals("")) {
-			throw new Exception("Cannot reverse split without inputs.");
+		if(!hasInput || inputs.size() == 0) {
+			throw new Exception("Cannot split without inputs.");
 		}
-		inputs.add(m.group(GROUP_RSPLIT_FINAL_INPUT));
 		List<Integer> outputs = new ArrayList<>(M.O);
 		UtilityMethods.removeDuplicates(outputs);
-		List<Automaton> subautomata = M.clone().uncombine(outputs,printSteps,prefix,log);
+		List<Automaton> subautomata = M.uncombine(outputs,printSteps,prefix,log);
 		for (int i = 0; i < subautomata.size(); i++) {
 			Automaton N = subautomata.get(i).reverseSplit(inputs,printSteps,prefix,log);
 			subautomata.set(i, N);
@@ -748,7 +761,44 @@ public class Prover {
 		N.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_RSPLIT_NAME)+".gv", s, true);
 		N.write(UtilityMethods.get_address_for_result()+m.group(GROUP_RSPLIT_NAME)+".txt");
 		N.write(UtilityMethods.get_address_for_words_library()+m.group(GROUP_RSPLIT_NAME)+".txt");
-		return true;
+		return new TestCase(s, N, "", "", "");
+	}
+
+	public static TestCase joinCommand(String s) throws Exception {
+		Matcher m = PATTERN_FOR_join_COMMAND.matcher(s);
+		if(!m.find()) {
+			throw new Exception("Invalid use of reverse split command.");
+		}
+		boolean printSteps = m.group(GROUP_JOIN_END).equals(":");
+		boolean printDetails = m.group(GROUP_JOIN_END).equals("::");
+		String prefix = new String();
+		StringBuffer log = new StringBuffer();
+
+		Matcher m1 = PATTERN_FOR_AN_AUTOMATON_IN_join_COMMAND.matcher(m.group(GROUP_JOIN_AUTOMATA));
+		List<Automaton> subautomata = new ArrayList<>();
+		while (m1.find()) {
+			String automatonName = m1.group(GROUP_JOIN_AUTOMATON_NAME);
+			Automaton M = new Automaton(UtilityMethods.get_address_for_words_library()+automatonName+".txt");
+			String automatonInputs = m1.group(GROUP_JOIN_AUTOMATON_INPUT);
+			Matcher m2 = PATTERN_FOR_AN_AUTOMATON_INPUT_IN_join_COMMAND.matcher(automatonInputs);
+			List<String> label = new ArrayList<>();
+			while (m2.find()) {
+				String t = m2.group(1);
+				label.add(t);
+			}
+			if (label.size() != M.A.size()) {
+				throw new Exception("Number of inputs of word automata " + automatonName + " does not match number of inputs specified.");
+			}
+			M.label = label;
+			subautomata.add(M);
+		}
+		Automaton N = subautomata.remove(0);
+		N = N.join(new LinkedList<>(subautomata),printSteps, prefix,log);
+
+		N.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_JOIN_NAME)+".gv", s, true);
+		N.write(UtilityMethods.get_address_for_result()+m.group(GROUP_JOIN_NAME)+".txt");
+		N.write(UtilityMethods.get_address_for_words_library()+m.group(GROUP_JOIN_NAME)+".txt");
+		return new TestCase(s, N, "", "", "");
 	}
 
 	public static void testCommand(String s) throws Exception {

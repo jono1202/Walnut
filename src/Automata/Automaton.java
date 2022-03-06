@@ -1000,41 +1000,45 @@ public class Automaton {
             TreeMap<Integer,List<Integer>> thisStatesTransitions = new TreeMap<Integer,List<Integer>>();
             N.d.add(thisStatesTransitions);
             switch(op){
-            case "&":
-                N.O.add((O.get(p) != 0 && M.O.get(q) != 0) ? 1 : 0);
-                break;
-            case "|":
-                N.O.add((O.get(p) != 0 || M.O.get(q) != 0) ? 1 : 0);
-                break;
-            case "^":
-                N.O.add(((O.get(p) != 0 && M.O.get(q) == 0)||(O.get(p) == 0 && M.O.get(q) != 0)) ? 1 : 0);
-                break;
-            case "=>":
-                N.O.add((O.get(p) == 0 || M.O.get(q) != 0) ? 1 : 0);
-                break;
-            case "<=>":
-                N.O.add(((O.get(p) == 0 && M.O.get(q) == 0) || (O.get(p) != 0 && M.O.get(q) != 0)) ? 1 : 0);
-                break;
-            case "<":
-                N.O.add((O.get(p) < M.O.get(q)) ? 1 : 0);
-                break;
-            case ">":
-                N.O.add((O.get(p) > M.O.get(q)) ? 1 : 0);
-                break;
-            case "=":
-                N.O.add((O.get(p) == M.O.get(q)) ? 1 : 0);
-                break;
-            case "!=":
-                N.O.add((O.get(p) != M.O.get(q)) ? 1 : 0);
-                break;
-            case "<=":
-                N.O.add((O.get(p) <= M.O.get(q)) ? 1 : 0);
-                break;
-            case ">=":
-                N.O.add((O.get(p) >= M.O.get(q)) ? 1 : 0);
-                break;
-            case "combine":
-                N.O.add((M.O.get(q) == 1) ? combineOutputs.get(combineIndex) : O.get(p));
+                case "&":
+                    N.O.add((O.get(p) != 0 && M.O.get(q) != 0) ? 1 : 0);
+                    break;
+                case "|":
+                    N.O.add((O.get(p) != 0 || M.O.get(q) != 0) ? 1 : 0);
+                    break;
+                case "^":
+                    N.O.add(((O.get(p) != 0 && M.O.get(q) == 0)||(O.get(p) == 0 && M.O.get(q) != 0)) ? 1 : 0);
+                    break;
+                case "=>":
+                    N.O.add((O.get(p) == 0 || M.O.get(q) != 0) ? 1 : 0);
+                    break;
+                case "<=>":
+                    N.O.add(((O.get(p) == 0 && M.O.get(q) == 0) || (O.get(p) != 0 && M.O.get(q) != 0)) ? 1 : 0);
+                    break;
+                case "<":
+                    N.O.add((O.get(p) < M.O.get(q)) ? 1 : 0);
+                    break;
+                case ">":
+                    N.O.add((O.get(p) > M.O.get(q)) ? 1 : 0);
+                    break;
+                case "=":
+                    N.O.add((O.get(p) == M.O.get(q)) ? 1 : 0);
+                    break;
+                case "!=":
+                    N.O.add((O.get(p) != M.O.get(q)) ? 1 : 0);
+                    break;
+                case "<=":
+                    N.O.add((O.get(p) <= M.O.get(q)) ? 1 : 0);
+                    break;
+                case ">=":
+                    N.O.add((O.get(p) >= M.O.get(q)) ? 1 : 0);
+                    break;
+                case "combine":
+                    N.O.add((M.O.get(q) == 1) ? combineOutputs.get(combineIndex) : O.get(p));
+                    break;
+                case "first":
+                    N.O.add(O.get(p) == 0 ? M.O.get(q) : O.get(p));
+                    break;
             }
 
             for(int x:d.get(p).keySet()){
@@ -1367,18 +1371,32 @@ public class Automaton {
 
     public List<Automaton> uncombine(List<Integer> outputs, boolean print, String prefix, StringBuffer log) throws Exception {
         List<Automaton> automata = new ArrayList<Automaton>();
-        for(int i = 0; i < outputs.size(); i++) {
+        for (Integer output : outputs) {
             Automaton M = clone();
-            for(int j = 0; j < M.O.size(); j++) {
-                if (M.O.get(j).equals(outputs.get(i))) {
-                    M.O.set(j,1);
+            for (int j = 0; j < M.O.size(); j++) {
+                if (M.O.get(j).equals(output)) {
+                    M.O.set(j, 1);
                 } else {
-                    M.O.set(j,0);
+                    M.O.set(j, 0);
                 }
             }
             automata.add(M);
         }
         return automata;
+    }
+
+    public Automaton minimizeWithOuput(boolean print, String prefix, StringBuffer log) throws Exception {
+        List<Integer> outputs = new ArrayList<>(O);
+        UtilityMethods.removeDuplicates(outputs);
+        List<Automaton> subautomata = uncombine(outputs,print,prefix,log);
+        for (Automaton subautomaton : subautomata) {
+            subautomaton.minimize(print, prefix, log);
+        }
+        Automaton N = subautomata.remove(0);
+        List<String> label = new ArrayList<>(N.label); // We keep the old labels, since they are replaced in the combine
+        N = N.combine(new LinkedList<>(subautomata),outputs,print, prefix,log);
+        N.label = label;
+        return N;
     }
 
     // Determines whether an automaton accepts infinitely many values. If it does, a regex of infinitely many accepted values (not all)
@@ -1528,6 +1546,22 @@ public class Automaton {
         M.sortLabel();
         M.randomLabel();
         return M;
+    }
+
+    public Automaton join(Queue<Automaton> subautomata, boolean print, String prefix, StringBuffer log) throws Exception {
+        Automaton first = this.clone();
+
+        while (subautomata.size() > 0) {
+            Automaton next = subautomata.remove();
+            // potentially add logging later
+
+            // crossProduct requires both automata to be totalized, otherwise it has no idea which cartesian states to transition to
+            first.totalize(print,prefix+" ",log);
+            next.totalize(print,prefix+" ",log);
+            first = first.crossProduct(next, "first", print, prefix, log);
+            first = first.minimizeWithOuput(print,prefix,log);
+        }
+        return first;
     }
 
     // helper function for inf, finds an input string that leads from q0 to the specified state
