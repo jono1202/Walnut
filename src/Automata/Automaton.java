@@ -1369,8 +1369,15 @@ public class Automaton {
         return first;
     }
 
+    /**
+     * @param outputs A list of integers, indicating which uncombined automata and in what order to return.
+     * @return A list of automata, each corresponding to the list of outputs.
+     * For the sake of an example, suppose that outputs is [0,1,2], then we return the list of automaton without output
+     * which accepts if the output in our automaton is 0,1 or 2 respectively.
+     * @throws Exception
+     */
     public List<Automaton> uncombine(List<Integer> outputs, boolean print, String prefix, StringBuffer log) throws Exception {
-        List<Automaton> automata = new ArrayList<Automaton>();
+        List<Automaton> automata = new ArrayList<>();
         for (Integer output : outputs) {
             Automaton M = clone();
             for (int j = 0; j < M.O.size(); j++) {
@@ -1385,6 +1392,13 @@ public class Automaton {
         return automata;
     }
 
+
+    /**
+     * @return A minimized DFA with output recognizing the same language as the current DFA (possibly also with output).
+     * We minimize a DFA with output by first uncombining into automata without output, minimizing the uncombined automata, and
+     * then recombining. It follows that if the ubcombined autoamta are minimal, then the combined automata is also minimal
+     * @throws Exception
+     */
     public Automaton minimizeWithOuput(boolean print, String prefix, StringBuffer log) throws Exception {
         List<Integer> outputs = new ArrayList<>(O);
         UtilityMethods.removeDuplicates(outputs);
@@ -1440,6 +1454,16 @@ public class Automaton {
         return "";
     }
 
+    /**
+     * @param inputs A list of "+", "-" or "". Indicating how our input will be interpreted in the output automata.
+     *               Inputs must correspond to inputs of the current automaton
+     *               which can be compared to some corresponding negative base.
+     * @return The automaton which replaces inputs in negative base with an input in corresponding comparable positive base.
+     * For sake of example, suppose the input is [+,-,] and M is the current automata with inputs in base -2.
+     * On inputs (x,y,z), where x,y are inputs in base 2, the automaton gives as output M(x',y',z) where
+     * x' and y' are in the corresponding base -2 representations of x and -y.
+     * @throws Exception
+     */
     public Automaton split(List<String> inputs, boolean print, String prefix, StringBuffer log) throws Exception {
         if(alphabetSize == 0) {
             throw new Exception("Cannot split automaton with no inputs.");
@@ -1494,6 +1518,17 @@ public class Automaton {
         return M;
     }
 
+    /**
+     * @param inputs A list of "+", "-" or "". Indicating how our input will be interpreted in the output automata.
+     *               Inputs must correspond to inputs of the current automaton
+     *               which can be compared to some corresponding negative base.
+     * @return The automaton which replaces inputs in positive base with an input in corresponding comparable negative base.
+     * For sake of example, suppose the input is [+,-,] and M is the current automata with inputs in base 2.
+     * On inputs (x,y,z), where x,y are inputs in base -2, the automaton gives as output M(x',y',z) where
+     * x' and y' are in the corresponding base 2 representations of x and -y. If x or -y has no corresponding
+     * base 2 representation, then the automaton outputs 0.
+     * @throws Exception
+     */
     public Automaton reverseSplit(List<String> inputs, boolean print, String prefix, StringBuffer log) throws Exception {
         if(alphabetSize == 0) {
             throw new Exception("Cannot reverse split automaton with no inputs.");
@@ -1548,6 +1583,14 @@ public class Automaton {
         return M;
     }
 
+
+    /**
+     * @param subautomata A queue of automaton which we will "join" with the current automaton.
+     * @return The cross product of the current automaton and automaton in subautomata, using the operation "first" on the outputs.
+     * For sake of example, the current Automaton is M1, and subautomata consists of M2 and M3.
+     * Then on input x, returned automaton should output the first value of [ M1(x), M2(x), M3(x) ] which is non-zero.
+     * @throws Exception
+     */
     public Automaton join(Queue<Automaton> subautomata, boolean print, String prefix, StringBuffer log) throws Exception {
         Automaton first = this.clone();
 
