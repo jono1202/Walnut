@@ -1331,22 +1331,25 @@ public class Automaton {
 			Automaton M = new Automaton(UtilityMethods.get_address_for_automata_library()+name+".txt");
 			subautomata.add(M);
 		}
+        return combine(subautomata, outputs, print, prefix, log);
+    }
 
-		Automaton first = this.clone();
-	
-		// In an automaton without output, every non-zero output value represents an accepting state
+    public Automaton combine(Queue<Automaton> subautomata, List<Integer> outputs, boolean print, String prefix, StringBuffer log) throws Exception {
+        Automaton first = this.clone();
+
+        // In an automaton without output, every non-zero output value represents an accepting state
         // we change this to correspond to the value assigned to the first automaton by our command
-		for (int q = 0; q < first.Q; q++) {
-			if (first.O.get(q) != 0) {
-				first.O.set(q, outputs.get(0));
-			}
-		}
-		first.combineIndex = 1;
+        for (int q = 0; q < first.Q; q++) {
+            if (first.O.get(q) != 0) {
+                first.O.set(q, outputs.get(0));
+            }
+        }
+        first.combineIndex = 1;
         first.combineOutputs = outputs;
-		while (subautomata.size() > 0) {
-			Automaton next = subautomata.remove();
-			// potentially add logging later
-            
+        while (subautomata.size() > 0) {
+            Automaton next = subautomata.remove();
+            // potentially add logging later
+
             // crossProduct requires labelling so we make an arbitrary labelling and use it for both: this is valid since
             // input alphabets and arities are assumed to be identical for the combine method
             first.randomLabel();
@@ -1354,12 +1357,28 @@ public class Automaton {
             // crossProduct requires both automata to be totalized, otherwise it has no idea which cartesian states to transition to
             first.totalize(print,prefix+" ",log);
             next.totalize(print,prefix+" ",log);
-			Automaton product = first.crossProduct(next, "combine", print, prefix, log);
-			product.combineIndex = first.combineIndex + 1;
+            Automaton product = first.crossProduct(next, "combine", print, prefix, log);
+            product.combineIndex = first.combineIndex + 1;
             product.combineOutputs = first.combineOutputs;
-			first = product;
-		}
+            first = product;
+        }
         return first;
+    }
+
+    public List<Automaton> uncombine(List<Integer> outputs, boolean print, String prefix, StringBuffer log) throws Exception {
+        List<Automaton> automata = new ArrayList<Automaton>();
+        for(int i = 0; i < outputs.size(); i++) {
+            Automaton M = clone();
+            for(int j = 0; j < M.O.size(); j++) {
+                if (M.O.get(j).equals(outputs.get(i))) {
+                    M.O.set(j,1);
+                } else {
+                    M.O.set(j,0);
+                }
+            }
+            automata.add(M);
+        }
+        return automata;
     }
 
     // Determines whether an automaton accepts infinitely many values. If it does, a regex of infinitely many accepted values (not all)
@@ -1457,12 +1476,12 @@ public class Automaton {
         return M;
     }
 
-    public Automaton join(List<String> inputs, boolean print, String prefix, StringBuffer log) throws Exception {
+    public Automaton reverseSplit(List<String> inputs, boolean print, String prefix, StringBuffer log) throws Exception {
         if(alphabetSize == 0) {
-            throw new Exception("Cannot join automaton with no inputs.");
+            throw new Exception("Cannot reverse split automaton with no inputs.");
         }
         if(inputs.size() != A.size()) {
-            throw new Exception("Join automaton has incorrect number of inputs.");
+            throw new Exception("Split automaton has incorrect number of inputs.");
         }
 
         Automaton M = clone();
