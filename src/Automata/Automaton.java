@@ -1366,7 +1366,7 @@ public class Automaton {
             // crossProduct requires both automata to be totalized, otherwise it has no idea which cartesian states to transition to
             first.totalize(print,prefix+" ",log);
             next.totalize(print,prefix+" ",log);
-            Automaton product = first.crossProduct(next, "combine", print, prefix, log);
+            Automaton product = first.crossProduct(next, "combine", print, prefix+" ", log);
             product.combineIndex = first.combineIndex + 1;
             product.combineOutputs = first.combineOutputs;
             first = product;
@@ -1618,8 +1618,8 @@ public class Automaton {
             // crossProduct requires both automata to be totalized, otherwise it has no idea which cartesian states to transition to
             first.totalize(print,prefix+" ",log);
             next.totalize(print,prefix+" ",log);
-            first = first.crossProduct(next, "first", print, prefix, log);
-            first = first.minimizeWithOuput(print,prefix,log);
+            first = first.crossProduct(next, "first", print, prefix+" ", log);
+            first = first.minimizeWithOuput(print,prefix+" ",log);
 
             long timeAfter = System.currentTimeMillis();
             if(print){
