@@ -591,6 +591,20 @@ public class IntegrationTest {
 		L.add("eval test437 \"?lsd_neg_fib Ex,y y = 4*x+1 & y = 13\";");
 		L.add("eval test438 \"?lsd_neg_fib Ex 13 = 4*x+1\";");
 		L.add("eval test439 \"?lsd_neg_fib Ex 11 = 4*x+1\";");
+
+		// split, reverseSplit and join
+		L.add("split test440 T2[+][+];");
+		L.add("split test441 T2[+][-];");
+		L.add("split test442 T2[-][+];");
+		L.add("split test443 T2[-][-];");
+		L.add("rsplit test444[+][+] test440;");
+		L.add("rsplit test445[+][-] test441;");
+		L.add("rsplit test446[-][+] test442;");
+		L.add("rsplit test447[-][-] test443;");
+		L.add("join test448 test444[a][b] test445[a][b] test446[a][b] test447[a][b];");
+		L.add("split test449 T2[+][];");
+		L.add("rsplit test450[+][] T2;");
+		L.add("join test451 T[a] T2[a][b];");
 	}
 	public void runPerformanceTest(String name,int numberOfRuns) throws Exception{
 		PrintWriter out = new PrintWriter(new FileOutputStream(new File(directoryAddress+performanceTestFileName), true /* append = true */));
