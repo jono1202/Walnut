@@ -84,7 +84,8 @@ public class NumberSystem {
 	 * -lessThan has two inputs, and it accepts iff the first
 	 * one is less than the second one. So the input is ordered!<br>
 	 * -equal has two inputs, and it accepts iff they are equal.
-	 * -comparison has two inputs, TODO.
+	 * -comparison_neg is defined only if the current number system is negative and has a corresponding comparable positive number system.
+	 * comparison_neg accepts inputs x,y if and only if x represents in the positive base the same non-negative integer and y does in the negative base.
 	 */
 	public Automaton addition;
 	public Automaton lessThan;
