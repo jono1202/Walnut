@@ -73,16 +73,24 @@ public class NumberSystem {
 	boolean is_msd;
 
 	/**
+	 * is_neg is used to determine whether the base is negative.
+	 */
+	boolean is_neg;
+
+	/**
 	 * Automata for addition, lessThan, and equal<br>
 	 * -addition has three inputs, and it accepts
 	 *  iff the third is the sum of the first two. So the input is ordered!<br>
 	 * -lessThan has two inputs, and it accepts iff the first
 	 * one is less than the second one. So the input is ordered!<br>
 	 * -equal has two inputs, and it accepts iff they are equal.
+	 * -comparison_neg is defined only if the current number system is negative and has a corresponding comparable positive number system.
+	 * comparison_neg accepts inputs x,y if and only if x represents in the positive base the same non-negative integer and y does in the negative base.
 	 */
 	public Automaton addition;
 	public Automaton lessThan;
 	public Automaton equality;
+	public Automaton comparison_neg;
 	public Automaton allRepresentations;
 
 	/**
@@ -119,10 +127,11 @@ public class NumberSystem {
 		this.name = name;
 		String msd_or_lsd = name.substring(0, name.indexOf("_"));
 		is_msd = msd_or_lsd.equals("msd");
+		is_neg = name.contains("neg");
 		String base = name.substring(name.indexOf("_") + 1);
 
 		/**
-		 * When the number system does not exits, we try to see whether its complement exists or not.
+		 * When the number system does not exist, we try to see whether its complement exists or not.
 		 * For example lsd_2 is the complement of msd_2.
 		 */
 		String complementName = (is_msd ? "lsd":"msd")+"_" + base;
@@ -221,6 +230,10 @@ public class NumberSystem {
 
 		setEquality(addition.A.get(0));
 
+		//comparison with negative base
+		if(UtilityMethods.parseNegNumber(base) > 1) {
+			comparison_neg = base_n_neg_compare(UtilityMethods.parseNegNumber(base));
+		}
 
 		//the set of all representations
 		if(new File(addressForTheSetOfAllRepresentations).isFile()) {
@@ -494,6 +507,89 @@ public class NumberSystem {
 	}
 
 	/**
+	 * Initializes equality of base n and base -n. Equality has two inputs (a,b), and it accepts
+	 * iff [a]_n = [b]_-n (a is a base n representation and b is a base -n representation of
+	 * the same integer).
+	 * @param n
+	 * @throws Exception
+	 */
+	private Automaton base_n_neg_compare(int n) throws Exception {
+		List<Integer> alphabet = new ArrayList<Integer>();
+		for (int i = 0; i < n; i++) alphabet.add(i);
+		Automaton compare = new Automaton();
+		compare.Q = 4;
+		compare.q0 = 0;
+		compare.O.add(1);
+		compare.O.add(1);
+		compare.O.add(0);
+		compare.O.add(0);
+		compare.d.add(new TreeMap<Integer, List<Integer>>());
+		compare.d.add(new TreeMap<Integer, List<Integer>>());
+		compare.d.add(new TreeMap<Integer, List<Integer>>());
+		compare.d.add(new TreeMap<Integer, List<Integer>>());
+		if(is_msd) {
+			compare.NS.add(new NumberSystem("msd_"+n));
+			compare.NS.add(this);
+		} else {
+			compare.NS.add(new NumberSystem("lsd_"+n));
+			compare.NS.add(this);
+		}
+		compare.A.add(new ArrayList<Integer>(alphabet));
+		compare.A.add(alphabet);
+		compare.alphabetSize = alphabet.size() * alphabet.size();
+		int l = 0;
+		for(int j = 0; j < n;j++){
+			for(int i = 0 ; i < n;i++){
+				if(i == 0 && j == 0){
+					List<Integer> dest = new ArrayList<Integer>();
+					dest.add(0);
+					compare.d.get(1).put(l,dest);
+				}
+				if(i == j){
+					List<Integer> dest = new ArrayList<Integer>();
+					dest.add(1);
+					compare.d.get(0).put(l,dest);
+				}
+				if(i+1 == j){
+					List<Integer> dest = new ArrayList<Integer>();
+					dest.add(1);
+					compare.d.get(2).put(l,dest);
+				}
+				if(i+j == n){
+					List<Integer> dest = new ArrayList<Integer>();
+					dest.add(2);
+					compare.d.get(1).put(l,dest);
+				}
+				if(i+j == n-1){
+					List<Integer> dest = new ArrayList<Integer>();
+					dest.add(2);
+					compare.d.get(3).put(l,dest);
+				}
+				if(i == n-1 && j == 0){
+					List<Integer> dest = new ArrayList<Integer>();
+					dest.add(3);
+					compare.d.get(2).put(l,dest);
+				}
+				l++;
+			}
+		}
+
+		if(is_msd) {
+			compare.reverse(false,null,null);
+		}
+		return compare;
+	}
+
+	/**
+	 * Gives the corresponding negative number system if one is defined. Throws an exception otherwise.
+	 */
+	public NumberSystem negative_number_system() throws Exception {
+		String msd_or_lsd = name.substring(0, name.indexOf("_"));
+		String base = name.substring(name.indexOf("_") + 1);
+		return new NumberSystem(msd_or_lsd + "_neg_" + base);
+	}
+
+	/**
 	 *
 	 * @param n
 	 * @return an automaton that accepts only n.
@@ -570,6 +666,7 @@ public class NumberSystem {
 	 * @throws Exception
 	 */
 	public Automaton comparison(String a,int b,String comparisonOperator) throws Exception {
+		if(!is_neg && b < 0)throw new Exception("negative constant " + b);
 		String B = "new " + a;//this way, we make sure B != a.
 		Automaton N,M;
 		if (b < 0) {
@@ -595,6 +692,7 @@ public class NumberSystem {
 	 * @throws Exception
 	 */
 	public Automaton comparison(int a,String b,String comparisonOperator) throws Exception {
+		if(!is_neg && a < 0)throw new Exception("negative constant " + a);
 		switch (comparisonOperator) {
 			case "<":
 				return comparison(b, a, ">");
@@ -659,6 +757,7 @@ public class NumberSystem {
 			int b,
 			String c,
 			String arithmeticOperator) throws Exception {
+		if(!is_neg && b < 0)throw new Exception("negative constant " + b);
 		Automaton N;
 		if(arithmeticOperator.equals("*")){
 			//note that the case of b = 0 is handled in Computer class
@@ -707,6 +806,7 @@ public class NumberSystem {
 		String b,
 		String c,
 		String arithmeticOperator) throws Exception {
+		if(!is_neg && a < 0)throw new Exception("negative constant " + a);
 		Automaton N;
 		if(arithmeticOperator.equals("*")){
 			N = getMultiplication(a);
@@ -755,6 +855,7 @@ public class NumberSystem {
 			String b,
 			int c,
 			String arithmeticOperator) throws Exception {
+		if(!is_neg && c < 0)throw new Exception("negative constant " + c);
 		Automaton N;
 		if(arithmeticOperator.equals("*")) {
 			throw new Exception("the operator * cannot be applied to two variables");
@@ -789,6 +890,9 @@ public class NumberSystem {
 	 * @throws Exception
 	 */
 	private Automaton constant(int n) throws Exception {
+		if (!is_neg && n < 0) {
+			throw new Exception("Constant cannot be negative.");
+		}
 		if (constantsDynamicTable.containsKey(n)) {
 			return constantsDynamicTable.get(n);
 		}
@@ -832,6 +936,7 @@ public class NumberSystem {
 	 * @throws Exception
 	 */
 	private Automaton multiplication(int n)throws Exception {
+		if(!is_neg && n < 0)throw new Exception("constant cannot be negative");
 		if(n == 0)throw new Exception("multiplication(0)");
 		if(multiplicationsDynamicTable.containsKey(n))return multiplicationsDynamicTable.get(n);
 		//note that the case of n==0 is handled in Computer class
@@ -874,6 +979,7 @@ public class NumberSystem {
 	 * @throws Exception
 	 */
 	private Automaton division(int n)throws Exception {
+		if(!is_neg && n < 0)throw new Exception("constant cannot be negative");
 		if(n == 0)throw new Exception("division by zero");
 		if(divisionsDynamicTable.containsKey(n))return divisionsDynamicTable.get(n);
 		Automaton R;

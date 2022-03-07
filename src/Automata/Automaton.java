@@ -1000,41 +1000,45 @@ public class Automaton {
             TreeMap<Integer,List<Integer>> thisStatesTransitions = new TreeMap<Integer,List<Integer>>();
             N.d.add(thisStatesTransitions);
             switch(op){
-            case "&":
-                N.O.add((O.get(p) != 0 && M.O.get(q) != 0) ? 1 : 0);
-                break;
-            case "|":
-                N.O.add((O.get(p) != 0 || M.O.get(q) != 0) ? 1 : 0);
-                break;
-            case "^":
-                N.O.add(((O.get(p) != 0 && M.O.get(q) == 0)||(O.get(p) == 0 && M.O.get(q) != 0)) ? 1 : 0);
-                break;
-            case "=>":
-                N.O.add((O.get(p) == 0 || M.O.get(q) != 0) ? 1 : 0);
-                break;
-            case "<=>":
-                N.O.add(((O.get(p) == 0 && M.O.get(q) == 0) || (O.get(p) != 0 && M.O.get(q) != 0)) ? 1 : 0);
-                break;
-            case "<":
-                N.O.add((O.get(p) < M.O.get(q)) ? 1 : 0);
-                break;
-            case ">":
-                N.O.add((O.get(p) > M.O.get(q)) ? 1 : 0);
-                break;
-            case "=":
-                N.O.add((O.get(p) == M.O.get(q)) ? 1 : 0);
-                break;
-            case "!=":
-                N.O.add((O.get(p) != M.O.get(q)) ? 1 : 0);
-                break;
-            case "<=":
-                N.O.add((O.get(p) <= M.O.get(q)) ? 1 : 0);
-                break;
-            case ">=":
-                N.O.add((O.get(p) >= M.O.get(q)) ? 1 : 0);
-                break;
-            case "combine":
-                N.O.add((M.O.get(q) == 1) ? combineOutputs.get(combineIndex) : O.get(p));
+                case "&":
+                    N.O.add((O.get(p) != 0 && M.O.get(q) != 0) ? 1 : 0);
+                    break;
+                case "|":
+                    N.O.add((O.get(p) != 0 || M.O.get(q) != 0) ? 1 : 0);
+                    break;
+                case "^":
+                    N.O.add(((O.get(p) != 0 && M.O.get(q) == 0)||(O.get(p) == 0 && M.O.get(q) != 0)) ? 1 : 0);
+                    break;
+                case "=>":
+                    N.O.add((O.get(p) == 0 || M.O.get(q) != 0) ? 1 : 0);
+                    break;
+                case "<=>":
+                    N.O.add(((O.get(p) == 0 && M.O.get(q) == 0) || (O.get(p) != 0 && M.O.get(q) != 0)) ? 1 : 0);
+                    break;
+                case "<":
+                    N.O.add((O.get(p) < M.O.get(q)) ? 1 : 0);
+                    break;
+                case ">":
+                    N.O.add((O.get(p) > M.O.get(q)) ? 1 : 0);
+                    break;
+                case "=":
+                    N.O.add((O.get(p) == M.O.get(q)) ? 1 : 0);
+                    break;
+                case "!=":
+                    N.O.add((O.get(p) != M.O.get(q)) ? 1 : 0);
+                    break;
+                case "<=":
+                    N.O.add((O.get(p) <= M.O.get(q)) ? 1 : 0);
+                    break;
+                case ">=":
+                    N.O.add((O.get(p) >= M.O.get(q)) ? 1 : 0);
+                    break;
+                case "combine":
+                    N.O.add((M.O.get(q) == 1) ? combineOutputs.get(combineIndex) : O.get(p));
+                    break;
+                case "first":
+                    N.O.add(O.get(p) == 0 ? M.O.get(q) : O.get(p));
+                    break;
             }
 
             for(int x:d.get(p).keySet()){
@@ -1331,22 +1335,30 @@ public class Automaton {
 			Automaton M = new Automaton(UtilityMethods.get_address_for_automata_library()+name+".txt");
 			subautomata.add(M);
 		}
+        return combine(subautomata, outputs, print, prefix, log);
+    }
 
-		Automaton first = this.clone();
-	
-		// In an automaton without output, every non-zero output value represents an accepting state
+    public Automaton combine(Queue<Automaton> subautomata, List<Integer> outputs, boolean print, String prefix, StringBuffer log) throws Exception {
+        Automaton first = this.clone();
+
+        // In an automaton without output, every non-zero output value represents an accepting state
         // we change this to correspond to the value assigned to the first automaton by our command
-		for (int q = 0; q < first.Q; q++) {
-			if (first.O.get(q) != 0) {
-				first.O.set(q, outputs.get(0));
-			}
-		}
-		first.combineIndex = 1;
+        for (int q = 0; q < first.Q; q++) {
+            if (first.O.get(q) != 0) {
+                first.O.set(q, outputs.get(0));
+            }
+        }
+        first.combineIndex = 1;
         first.combineOutputs = outputs;
-		while (subautomata.size() > 0) {
-			Automaton next = subautomata.remove();
-			// potentially add logging later
-            
+        while (subautomata.size() > 0) {
+            Automaton next = subautomata.remove();
+            long timeBefore = System.currentTimeMillis();
+            if(print){
+                String msg = prefix + "computing =>:" + first.Q + " states - " + next.Q + " states";
+                log.append(msg + UtilityMethods.newLine());
+                System.out.println(msg);
+            }
+
             // crossProduct requires labelling so we make an arbitrary labelling and use it for both: this is valid since
             // input alphabets and arities are assumed to be identical for the combine method
             first.randomLabel();
@@ -1354,12 +1366,63 @@ public class Automaton {
             // crossProduct requires both automata to be totalized, otherwise it has no idea which cartesian states to transition to
             first.totalize(print,prefix+" ",log);
             next.totalize(print,prefix+" ",log);
-			Automaton product = first.crossProduct(next, "combine", print, prefix, log);
-			product.combineIndex = first.combineIndex + 1;
+            Automaton product = first.crossProduct(next, "combine", print, prefix+" ", log);
+            product.combineIndex = first.combineIndex + 1;
             product.combineOutputs = first.combineOutputs;
-			first = product;
-		}
+            first = product;
+
+            long timeAfter = System.currentTimeMillis();
+            if(print){
+                String msg = prefix + "computed =>:" + first.Q + " states - "+(timeAfter-timeBefore)+"ms";
+                log.append(msg + UtilityMethods.newLine());
+                System.out.println(msg);
+            }
+        }
         return first;
+    }
+
+    /**
+     * @param outputs A list of integers, indicating which uncombined automata and in what order to return.
+     * @return A list of automata, each corresponding to the list of outputs.
+     * For the sake of an example, suppose that outputs is [0,1,2], then we return the list of automaton without output
+     * which accepts if the output in our automaton is 0,1 or 2 respectively.
+     * @throws Exception
+     */
+    public List<Automaton> uncombine(List<Integer> outputs, boolean print, String prefix, StringBuffer log) throws Exception {
+        List<Automaton> automata = new ArrayList<>();
+        for (Integer output : outputs) {
+            Automaton M = clone();
+            for (int j = 0; j < M.O.size(); j++) {
+                if (M.O.get(j).equals(output)) {
+                    M.O.set(j, 1);
+                } else {
+                    M.O.set(j, 0);
+                }
+            }
+            automata.add(M);
+        }
+        return automata;
+    }
+
+
+    /**
+     * @return A minimized DFA with output recognizing the same language as the current DFA (possibly also with output).
+     * We minimize a DFA with output by first uncombining into automata without output, minimizing the uncombined automata, and
+     * then recombining. It follows that if the ubcombined autoamta are minimal, then the combined automata is also minimal
+     * @throws Exception
+     */
+    public Automaton minimizeWithOuput(boolean print, String prefix, StringBuffer log) throws Exception {
+        List<Integer> outputs = new ArrayList<>(O);
+        UtilityMethods.removeDuplicates(outputs);
+        List<Automaton> subautomata = uncombine(outputs,print,prefix,log);
+        for (Automaton subautomaton : subautomata) {
+            subautomaton.minimize(print, prefix, log);
+        }
+        Automaton N = subautomata.remove(0);
+        List<String> label = new ArrayList<>(N.label); // We keep the old labels, since they are replaced in the combine
+        N = N.combine(new LinkedList<>(subautomata),outputs,print, prefix,log);
+        N.label = label;
+        return N;
     }
 
     // Determines whether an automaton accepts infinitely many values. If it does, a regex of infinitely many accepted values (not all)
@@ -1401,6 +1464,171 @@ public class Automaton {
         }
         visited.remove(state);
         return "";
+    }
+
+    /**
+     * @param inputs A list of "+", "-" or "". Indicating how our input will be interpreted in the output automata.
+     *               Inputs must correspond to inputs of the current automaton
+     *               which can be compared to some corresponding negative base.
+     * @return The automaton which replaces inputs in negative base with an input in corresponding comparable positive base.
+     * For sake of example, suppose the input is [+,-,] and M is the current automata with inputs in base -2.
+     * On inputs (x,y,z), where x,y are inputs in base 2, the automaton gives as output M(x',y',z) where
+     * x' and y' are in the corresponding base -2 representations of x and -y.
+     * @throws Exception
+     */
+    public Automaton split(List<String> inputs, boolean print, String prefix, StringBuffer log) throws Exception {
+        if(alphabetSize == 0) {
+            throw new Exception("Cannot split automaton with no inputs.");
+        }
+        if(inputs.size() != A.size()) {
+            throw new Exception("Split automaton has incorrect number of inputs.");
+        }
+
+        Automaton M = clone();
+        Set<String> quantifiers = new HashSet<String>();
+        // We label M [b0,b1,...,b(A.size()-1)]
+        if(M.label == null)M.label = new ArrayList<String>();
+        else if(M.label.size() > 0)M.label = new ArrayList<String>();
+        for(int i = 0 ; i < A.size();i++){
+            M.label.add("b" + i);
+        }
+        for(int i = 0; i < inputs.size(); i++) {
+            if (!inputs.get(i).equals("")) {
+                if (NS.get(i) == null)
+                    throw new Exception("Number system for input must be defined.");
+                NumberSystem negativeNumberSystem;
+                if (!NS.get(i).is_neg) {
+                    try {
+                        negativeNumberSystem = NS.get(i).negative_number_system();
+                    } catch (Exception e) {
+                        throw new Exception("Negative number system for " + NS.get(i) + " must be defined");
+                    }
+                } else {
+                    negativeNumberSystem = NS.get(i);
+                }
+                if (negativeNumberSystem.comparison_neg == null) {
+                    throw new Exception("Number systems " + NS.get(i) + " and " + negativeNumberSystem + " cannot be compared.");
+                }
+
+                Automaton compare = negativeNumberSystem.comparison_neg.clone();
+                String a = Integer.toString(i), b = "b"+i, c = "c"+i;
+                if (inputs.get(i).equals("+")) {
+                    compare.bind(a, b);
+                    M = M.and(compare, print, prefix, log);
+                    quantifiers.add(b);
+                } else { // inputs.get(i).equals("-")
+                    compare.bind(a, c);
+                    M = M.and(compare, print, prefix, log);
+                    M = M.and(negativeNumberSystem.arithmetic(b,c,0,"+"), print, prefix, log);
+                    quantifiers.add(b); quantifiers.add(c);
+                }
+            }
+        }
+        M.quantify(quantifiers, print, prefix, log);
+        M.sortLabel();
+        M.randomLabel();
+        return M;
+    }
+
+    /**
+     * @param inputs A list of "+", "-" or "". Indicating how our input will be interpreted in the output automata.
+     *               Inputs must correspond to inputs of the current automaton
+     *               which can be compared to some corresponding negative base.
+     * @return The automaton which replaces inputs in positive base with an input in corresponding comparable negative base.
+     * For sake of example, suppose the input is [+,-,] and M is the current automata with inputs in base 2.
+     * On inputs (x,y,z), where x,y are inputs in base -2, the automaton gives as output M(x',y',z) where
+     * x' and y' are in the corresponding base 2 representations of x and -y. If x or -y has no corresponding
+     * base 2 representation, then the automaton outputs 0.
+     * @throws Exception
+     */
+    public Automaton reverseSplit(List<String> inputs, boolean print, String prefix, StringBuffer log) throws Exception {
+        if(alphabetSize == 0) {
+            throw new Exception("Cannot reverse split automaton with no inputs.");
+        }
+        if(inputs.size() != A.size()) {
+            throw new Exception("Split automaton has incorrect number of inputs.");
+        }
+
+        Automaton M = clone();
+        Set<String> quantifiers = new HashSet<String>();
+        // We label M [b0,b1,...,b(A.size()-1)]
+        if(M.label == null)M.label = new ArrayList<String>();
+        else if(M.label.size() > 0)M.label = new ArrayList<String>();
+        for(int i = 0 ; i < A.size();i++){
+            M.label.add("b" + i);
+        }
+        for(int i = 0; i < inputs.size(); i++) {
+            if (!inputs.get(i).equals("")) {
+                if (NS.get(i) == null)
+                    throw new Exception("Number system for input must be defined.");
+                NumberSystem negativeNumberSystem;
+                if (!NS.get(i).is_neg) {
+                    try {
+                        negativeNumberSystem = NS.get(i).negative_number_system();
+                    } catch (Exception e) {
+                        throw new Exception("Negative number system for " + NS.get(i) + " must be defined");
+                    }
+                } else {
+                    negativeNumberSystem = NS.get(i);
+                }
+                if (negativeNumberSystem.comparison_neg == null) {
+                    throw new Exception("Number systems " + NS.get(i) + " and " + negativeNumberSystem + " cannot be compared.");
+                }
+
+                Automaton compare = negativeNumberSystem.comparison_neg.clone();
+                String a = Integer.toString(i), b = "b"+i, c = "c"+i;
+                if (inputs.get(i).equals("+")) {
+                    compare.bind(b, a);
+                    M = M.and(compare, print, prefix, log);
+                    quantifiers.add(b);
+                } else { // inputs.get(i).equals("-")
+                    compare.bind(b, c);
+                    M = M.and(compare, print, prefix, log);
+                    M = M.and(negativeNumberSystem.arithmetic(a,c,0,"+"), print, prefix, log);
+                    quantifiers.add(b); quantifiers.add(c);
+                }
+            }
+        }
+        M.quantify(quantifiers, print, prefix, log);
+        M.sortLabel();
+        M.randomLabel();
+        return M;
+    }
+
+
+    /**
+     * @param subautomata A queue of automaton which we will "join" with the current automaton.
+     * @return The cross product of the current automaton and automaton in subautomata, using the operation "first" on the outputs.
+     * For sake of example, the current Automaton is M1, and subautomata consists of M2 and M3.
+     * Then on input x, returned automaton should output the first non-zero value of [ M1(x), M2(x), M3(x) ].
+     * @throws Exception
+     */
+    public Automaton join(Queue<Automaton> subautomata, boolean print, String prefix, StringBuffer log) throws Exception {
+        Automaton first = this.clone();
+
+        while (subautomata.size() > 0) {
+            Automaton next = subautomata.remove();
+            long timeBefore = System.currentTimeMillis();
+            if(print){
+                String msg = prefix + "computing =>:" + first.Q + " states - " + next.Q + " states";
+                log.append(msg + UtilityMethods.newLine());
+                System.out.println(msg);
+            }
+
+            // crossProduct requires both automata to be totalized, otherwise it has no idea which cartesian states to transition to
+            first.totalize(print,prefix+" ",log);
+            next.totalize(print,prefix+" ",log);
+            first = first.crossProduct(next, "first", print, prefix+" ", log);
+            first = first.minimizeWithOuput(print,prefix+" ",log);
+
+            long timeAfter = System.currentTimeMillis();
+            if(print){
+                String msg = prefix + "computed =>:" + first.Q + " states - "+(timeAfter-timeBefore)+"ms";
+                log.append(msg + UtilityMethods.newLine());
+                System.out.println(msg);
+            }
+        }
+        return first;
     }
 
     // helper function for inf, finds an input string that leads from q0 to the specified state
