@@ -508,7 +508,7 @@ public class NumberSystem {
 
 	/**
 	 * Initializes equality of base n and base -n. Equality has two inputs (a,b), and it accepts
-	 * iff [a]_n = [b]_-n (a is a base 2 representation and b is a base -2 representation of
+	 * iff [a]_n = [b]_-n (a is a base n representation and b is a base -n representation of
 	 * the same integer).
 	 * @param n
 	 * @throws Exception
