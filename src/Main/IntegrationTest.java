@@ -605,6 +605,11 @@ public class IntegrationTest {
 		L.add("split test449 T2[+][];");
 		L.add("rsplit test450[+][] T2;");
 		L.add("join test451 T[a] T2[a][b];");
+
+		// double variable tests
+		L.add("eval test452 \"x + x = 0\";");
+		L.add("eval test453 \"x - x = 0\";");
+		L.add("eval test454 \"x = x\";");
 	}
 	public void runPerformanceTest(String name,int numberOfRuns) throws Exception{
 		PrintWriter out = new PrintWriter(new FileOutputStream(new File(directoryAddress+performanceTestFileName), true /* append = true */));
