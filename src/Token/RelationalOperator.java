@@ -45,18 +45,20 @@ public class RelationalOperator extends Operator{
 		Expression b = S.pop();
 		Expression a = S.pop();
 		
-		if(a.is(Type.alphabetLetter) && b.is(Type.alphabetLetter)){
+		if((a.is(Type.numberLiteral) || a.is(Type.alphabetLetter)) && (a.is(Type.numberLiteral) || b.is(Type.alphabetLetter))){
 			S.push(new Expression(a+op+b,new Automaton(compare(a.constant,b.constant))));
 			return;
 		}
-		else if(a.is(Type.numberLiteral) && b.is(Type.numberLiteral)){
-			S.push(new Expression(a+op+b,new Automaton(compare(a.constant,b.constant ))));	
-			return;
-		}
-		String preStep = prefix + "computing " + a+op+b;  
+		String preStep = prefix + "computing " + a+op+b;
 		log.append(preStep + UtilityMethods.newLine());
-		if(print){
+		if(print) {
 			System.out.println(preStep);
+		}
+		else if(a.is(Type.word) && (b.is(Type.arithmetic) || b.is(Type.variable))) {
+			a.wordToArithmetic(getUniqueString(), number_system, print, prefix, log);
+		}
+		if((a.is(Type.arithmetic) || a.is(Type.variable)) && b.is(Type.word)) {
+			b.wordToArithmetic(getUniqueString(), number_system, print, prefix, log);
 		}
 		if((a.is(Type.arithmetic) || a.is(Type.variable))
 				&& (b.is(Type.arithmetic) || b.is(Type.variable))){
@@ -72,7 +74,7 @@ public class RelationalOperator extends Operator{
 			
 			S.push(new Expression(a+op+b,M));
 		}
-		else if(a.is(Type.numberLiteral) && ((b.is(Type.arithmetic) || b.is(Type.variable)))){
+		else if((a.is(Type.numberLiteral) || a.is(Type.alphabetLetter)) && (b.is(Type.arithmetic) || b.is(Type.variable))){
 			Automaton M = number_system.comparison(a.constant, b.identifier, op);
 			if(b.is(Type.arithmetic)){
 				M = M.and(b.M,print,prefix+" ",log);
@@ -80,8 +82,7 @@ public class RelationalOperator extends Operator{
 			}
 			S.push(new Expression(a+op+b,M));
 		}
-		else if((a.is(Type.arithmetic) || a.is(Type.variable))
-				&& b.is(Type.numberLiteral)){
+		else if((a.is(Type.arithmetic) || a.is(Type.variable)) && (b.is(Type.numberLiteral) || b.is(Type.alphabetLetter))){
 			Automaton M = number_system.comparison(a.identifier, b.constant, op);
 			if(a.is(Type.arithmetic)){
 				M = M.and(a.M,print,prefix+" ",log);
@@ -94,17 +95,17 @@ public class RelationalOperator extends Operator{
 			M = M.and(a.M,print,prefix+" ",log);
 			M = M.and(b.M,print,prefix+" ",log);
 			M.quantify(new HashSet<String>(a.list_of_identifiers_to_quantify),print,prefix+" ",log);
-			M.quantify(new HashSet<String>(b.list_of_identifiers_to_quantify),print,prefix+" ",log);			
+			M.quantify(new HashSet<String>(b.list_of_identifiers_to_quantify),print,prefix+" ",log);
 			S.push(new Expression(a+op+b,M));
 		}
-		else if(a.is(Type.word) && b.is(Type.alphabetLetter)){
+		else if(a.is(Type.word) && (b.is(Type.numberLiteral) || b.is(Type.alphabetLetter))){
 			a.W.compare(b.constant, op,print,prefix+" ",log);
 			Automaton M = a.W;
 			M = M.and(a.M,print,prefix+" ",log);
 			M.quantify(new HashSet<String>(a.list_of_identifiers_to_quantify),print,prefix+" ",log);
 			S.push(new Expression(a+op+b,M));
 		}
-		else if(a.is(Type.alphabetLetter) && b.is(Type.word)){
+		else if((a.is(Type.numberLiteral) || a.is(Type.alphabetLetter)) && b.is(Type.word)){
 			b.W.compare(a.constant, reverseOperator(op),print,prefix+" ",log);
 			Automaton M = b.W;
 			M = M.and(b.M,print,prefix+" ",log);

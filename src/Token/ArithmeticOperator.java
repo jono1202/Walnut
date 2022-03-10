@@ -17,6 +17,7 @@
 */
 
 package Token;
+import java.util.HashSet;
 import java.util.Stack;
 
 import Main.Expression;
@@ -45,12 +46,19 @@ public class ArithmeticOperator extends Operator{
 	public void act(Stack<Expression> S,boolean print,String prefix,StringBuffer log) throws Exception{
 		if(S.size() < getArity())throw new Exception("operator " + op + " requires " + getArity()+ " operands");
 		Expression b = S.pop();
-		if(!(b.is(Type.arithmetic) || b.is(Type.variable) || b.is(Type.numberLiteral)))
+		if(!(b.is(Type.alphabetLetter) || b.is(Type.word) || b.is(Type.arithmetic) || b.is(Type.variable) || b.is(Type.numberLiteral)))
 			throw new Exception("operator " + op + " cannot be applied to the operand " +b+" of type " + b.getType());
 
 		if(op.equals("_")) {
 			if(b.is(Type.numberLiteral)) {
 				S.push(new Expression(Integer.toString(-b.constant), -b.constant, number_system));
+				return;
+			} else if(b.is(Type.alphabetLetter)) {
+				S.push(new Expression("@"+(-b.constant), -b.constant));
+				return;
+			} else if(b.is(Type.word)) {
+				b.W.applyOperator(0,"_", print, prefix, log);
+				S.push(b);
 				return;
 			}
 			String c = getUniqueString();
@@ -76,28 +84,56 @@ public class ArithmeticOperator extends Operator{
 		}
 
 		Expression a = S.pop();
-		if(!(a.is(Type.arithmetic) || a.is(Type.variable) || a.is(Type.numberLiteral)))
+		if(!(a.is(Type.alphabetLetter) || a.is(Type.word) || a.is(Type.arithmetic) || a.is(Type.variable) || a.is(Type.numberLiteral)))
 			throw new Exception("operator " + op + " cannot be applied to the operand "+ a+ " of type " + a.getType());
 
-		if(a.is(Type.numberLiteral) && b.is(Type.numberLiteral)){
-			switch(op){
+		if(a.is(Type.word) && b.is(Type.word)) {
+			a.W = a.W.applyOperator(b.W, op, print, prefix, log);
+			S.push(a);
+			return;
+		}
+		if(a.is(Type.word) && (b.is(Type.alphabetLetter) || b.is(Type.numberLiteral))) {
+			a.W.applyOperator(op, b.constant, print, prefix, log);
+			S.push(a);
+			return;
+		}
+		if((a.is(Type.alphabetLetter) || a.is(Type.numberLiteral)) && b.is(Type.word)) {
+			b.W.applyOperator(a.constant, op, print, prefix, log);
+			S.push(b);
+			return;
+		}
+
+		if((a.is(Type.numberLiteral) || a.is(Type.alphabetLetter)) && (b.is(Type.numberLiteral) || b.is(Type.numberLiteral))) {
+			switch (op) {
 				case "+":
-					S.push(new Expression(Integer.toString(a.constant+b.constant),a.constant+b.constant,number_system));
+					S.push(new Expression(Integer.toString(a.constant + b.constant), a.constant + b.constant, number_system));
 					return;
 				case "*":
-					S.push(new Expression(Integer.toString(a.constant*b.constant),a.constant*b.constant,number_system));
+					S.push(new Expression(Integer.toString(a.constant * b.constant), a.constant * b.constant, number_system));
 					return;
 				case "/":
 					int c = Math.floorDiv(a.constant, b.constant);
-					S.push(new Expression(Integer.toString(c),c,number_system));
+					S.push(new Expression(Integer.toString(c), c, number_system));
 					return;
 				case "-":
-					S.push(new Expression(Integer.toString(a.constant-b.constant),a.constant-b.constant,number_system));
+					S.push(new Expression(Integer.toString(a.constant - b.constant), a.constant - b.constant, number_system));
 					return;
 			}
 		}
 		String c = getUniqueString();
 		Automaton M;
+		String preStep = prefix + "computing " + a+op+b;
+		log.append(preStep + UtilityMethods.newLine());
+		if(print){
+			System.out.println(preStep);
+		}
+		if(a.is(Type.word) && (b.is(Type.arithmetic) || b.is(Type.variable))) {
+			a.wordToArithmetic(getUniqueString(), number_system, print, prefix, log);
+		}
+		else if((a.is(Type.arithmetic) || a.is(Type.variable)) && b.is(Type.word)) {
+			b.wordToArithmetic(getUniqueString(), number_system, print, prefix, log);
+		}
+
 		if(a.is(Type.numberLiteral)){
 			if(a.constant == 0 && op.equals("*")){
 				S.push(new Expression("0",0,number_system));
@@ -116,11 +152,7 @@ public class ArithmeticOperator extends Operator{
 		else{
 			M = number_system.arithmetic(a.identifier, b.identifier, c, op);
 		}
-		String preStep = prefix + "computing " + a+op+b;
-		log.append(preStep + UtilityMethods.newLine());
-		if(print){
-			System.out.println(preStep);
-		}
+
 		if(a.is(Type.arithmetic)){
 			M = M.and(a.M,print,prefix+" ",log);
 			M.quantify(a.identifier,print,prefix+" ",log);
