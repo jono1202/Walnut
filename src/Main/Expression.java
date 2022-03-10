@@ -122,8 +122,18 @@ public class Expression {
 	 * Transforms a word expression to an arithmetic expression. For sake of example, suppose the word is T[M(a)]
 	 * for some automaton M. Then this transforms the expression into the arithmetic expression T[M(a)] = b
 	 * where b is the identifier. This is used to perform arithmetic on the output of words.
+	 * In detail, the resulting the arithmetic expression has automata with the equivalent logical statement:
+	 * (a,b): Eb (T[M(a)] = @0 => b = 0) & (T[M(a)] = @1 => b = 1)
+	 * With more statements of the form (T[M(a)] = @i => b = i) for each output i.
+	 * It is clear why we need to specify the number system, since we need some way to interpret any integer.
+	 * Moreover, if the output consists of negative numbers, but the number system is non-negative, then
+	 * we throw an error.
+	 * @param identifier The identifier b we want to assign the arithmetic expression.
+	 * @param numberSystem The number system we used to interpret the output of the automata
+	 * @throws Exception
 	 */
-	public void wordToArithmetic(String identifier, NumberSystem numberSystem, boolean print, String prefix, StringBuffer log) throws Exception {
+	public void wordToArithmetic(String identifier, NumberSystem numberSystem,
+								 boolean print, String prefix, StringBuffer log) throws Exception {
 		if(!is(Type.word)) {
 			throw new Exception("Expression " + this + " must be of type word");
 		}
@@ -138,8 +148,8 @@ public class Expression {
 			O = O.and(N,print,prefix+" ",log);
 		}
 		O = O.and(M,print,prefix+" ",log);
-		O.quantify(identifier,print,prefix+" ",log);
 		M = O;
+		this.identifier = identifier;
 		T = Type.arithmetic;
 	}
 }
