@@ -2208,10 +2208,6 @@ public class Automaton {
         }
     }
 
-    public void debug_draw(String filename) throws Exception {
-        draw(UtilityMethods.get_address_for_result()+filename+".gv","???", true);
-    }
-
     /**
      * Writes down matrices for this automaton to a .mpl file given by the address.
      * @param address
