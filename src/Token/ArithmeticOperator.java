@@ -131,6 +131,10 @@ public class ArithmeticOperator extends Operator{
 		}
 		if( (a.is(Type.word) && (b.is(Type.arithmetic) || b.is(Type.variable))) ||
 				((a.is(Type.arithmetic) || a.is(Type.variable)) && b.is(Type.word)) ) {
+			/* We rewrite T[a] * 5 = z as
+			 * (T[a] = @0 => 0 * 5 = z) & (T[a] = @1 => 1 * 5 = z)
+			 * With more statements of the form (T[a] = @i => i * 5 = z) for each output i.
+			 */
 			Expression word; Expression arithmetic; boolean reverse;
 			if(a.is(Type.word)) {
 				word = a;

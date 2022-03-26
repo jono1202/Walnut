@@ -56,6 +56,10 @@ public class RelationalOperator extends Operator{
 		}
 		if( (a.is(Type.word) && (b.is(Type.arithmetic) || b.is(Type.variable))) ||
 				((a.is(Type.arithmetic) || a.is(Type.variable)) && b.is(Type.word)) ) {
+			/* We rewrite T[a] < b as
+			 * (T[a] = @0 => 0 < b) & (T[a] = @1 => 1 < b)
+			 * With more statements of the form (T[a] = @i => i < b) for each output i.
+			 */
 			Expression word; Expression arithmetic; boolean reverse;
 			if(a.is(Type.word)) {
 				word = a;
