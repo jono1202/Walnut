@@ -178,42 +178,4 @@ public class RelationalOperator extends Operator{
 			return "";
 		}
 	}
-
-	private Expression wordApplyOperator(Expression a, String op, Expression b,
-												 boolean print, String prefix, StringBuffer log) throws Exception {
-		Expression word; Expression arithmetic; boolean reverse;
-		if(a.is(Type.word) && (b.is(Type.arithmetic) || b.is(Type.variable))) {
-			word = a;
-			arithmetic = b;
-			reverse = false;
-		} else if ((a.is(Type.arithmetic) || a.is(Type.variable)) && b.is(Type.word)) {
-			word = b;
-			arithmetic = a;
-			reverse = true;
-		} else {
-			throw new Exception("Expressions " + a + " & " + b + " must be of type word & arithmetic/variable" +
-					"or arithmetic/variable & word");
-		}
-
-		Automaton M = new Automaton(true);
-		for(int o : word.W.O) {
-			Automaton N = word.W.clone();
-			N.compare(o, "=",print,prefix+" ",log);
-			Automaton C;
-			if (reverse) {
-				C = number_system.comparison(arithmetic.identifier, o, op);
-			} else {
-				C = number_system.comparison(o, arithmetic.identifier, op);
-			}
-			N = N.imply(C, print, prefix+" ",log);
-			M = M.and(N,print,prefix+" ",log);
-		}
-		M = M.and(word.M,print,prefix+" ",log);
-		M.quantify(new HashSet<>(word.list_of_identifiers_to_quantify),print,prefix+" ",log);
-		if(arithmetic.is(Type.arithmetic)){
-			M = M.and(arithmetic.M,print,prefix+" ",log);
-			M.quantify(arithmetic.identifier,print,prefix+" ",log);
-		}
-		return new Expression(word.toString(), M);
-	}
 }

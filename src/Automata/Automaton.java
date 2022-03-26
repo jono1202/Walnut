@@ -17,7 +17,6 @@
 */
 
 package Automata;
-import Main.Expression;
 import Main.GraphViz;
 import Main.UtilityMethods;
 
