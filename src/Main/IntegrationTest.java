@@ -610,6 +610,64 @@ public class IntegrationTest {
 		L.add("eval test452 \"x + x = 0\";");
 		L.add("eval test453 \"x - x = 0\";");
 		L.add("eval test454 \"x = x\";");
+
+		// dfao arithmetic tests
+		L.add("eval test455 \"T[a] + 5 = 6\";");
+		L.add("eval test456 \"?msd_neg_2 T[a] - 5 = _4\";");
+		L.add("eval test457 \"T[a] * 5 = 5\";");
+		L.add("eval test458 \"TH[a] / 3 = 1\";");
+		L.add("eval test459 \"3 / TH[a] = 1\";"); // error: division by zero
+		L.add("eval test460 \"T[a] + b = 1\";");
+		L.add("eval test461 \"a - (T[a] + b) = 0\";");
+		L.add("eval test462 \"?msd_neg_2 _T[a] = _1\";");
+
+		L.add("eval test463 \"T[a] + (b + c) = 1\";");
+		L.add("eval test464 \"?msd_neg_2 T[a] - (b + c) = 1\";");
+		L.add("eval test465 \"T[a] * (b + c) = 1\";");
+		L.add("eval test466 \"T[a] / (b + c) = 1\";");
+
+		L.add("eval test467 \"T[a] < b\";");
+		L.add("eval test468 \"T[a] + b > a\";");
+		L.add("eval test469 \"T[a] < b + c\";");
+		L.add("eval test470 \"?msd_neg_2 T[a] > b + c\";");
+		L.add("eval test471 \"T[a] < T[b]\";");
+
+		L.add("eval test472 \"T[a < 5] < b\";");
+		L.add("eval test473 \"T[a < 5] + b > a\";");
+		L.add("eval test474 \"T[a < 5] < b + c\";");
+		L.add("eval test475 \"?msd_neg_2 T[?msd_neg_2 a < 5] > b + c\";");
+		L.add("eval test476 \"T[a < 5] < T[b > 5]\";");
+
+		L.add("eval test477 \"T[a + c] < b\";");
+		L.add("eval test478 \"T[a + c] + b > a\";");
+		L.add("eval test479 \"T[a + d] < b + c\";");
+		L.add("eval test480 \"?msd_neg_2 T[?msd_neg_2 a + d] > b + c\";");
+		L.add("eval test481 \"T[a + c] < T[b - d]\";");
+
+		L.add("eval test482 \"TH[a] + TH[b] = 0\";");
+		L.add("eval test483 \"TH[a] - TH[b] = 0\";");
+		L.add("eval test484 \"TH[a] * TH[b] = 4\";");
+		L.add("eval test485 \"TH[a] = TH[b]\";");
+		L.add("eval test486 \"T[a] <= T[b]\";");
+
+		L.add("eval test487 \"TH[a < 5] + TH[b > 5] = 0\";");
+		L.add("eval test488 \"TH[a < 5] - TH[b > 5] = 0\";");
+		L.add("eval test489 \"TH[a < 5] * TH[b > 5] = 4\";");
+		L.add("eval test490 \"TH[a+c] = TH[b>5]\";");
+		L.add("eval test491 \"T[a+c] <= T[b>5]\";");
+
+		L.add("eval test492 \"TH[a+c] + TH[b-d] = 0\";");
+		L.add("eval test493 \"TH[a+c] - TH[b-d] = 0\";");
+		L.add("eval test494 \"TH[a+c] * TH[b-d] = 4\";");
+		L.add("eval test495 \"TH[a+c] = TH[b-d]\";");
+		L.add("eval test496 \"T[a+c] <= T[b-d]\";");
+
+		L.add("eval test497 \"TH[a+c] + TH[b > 5] = 0\";");
+		L.add("eval test498 \"TH[a+c] - TH[b > 5] = 0\";");
+		L.add("eval test499 \"TH[a+c] * TH[b > 5] = 4\";");
+		L.add("eval test500 \"TH[a+c] = TH[b>5]\";");
+		L.add("eval test501 \"T[a+c] <= T[b>5]\";");
+
 	}
 	public void runPerformanceTest(String name,int numberOfRuns) throws Exception{
 		PrintWriter out = new PrintWriter(new FileOutputStream(new File(directoryAddress+performanceTestFileName), true /* append = true */));

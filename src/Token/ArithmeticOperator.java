@@ -17,6 +17,8 @@
 */
 
 package Token;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Stack;
 
 import Main.Expression;
@@ -88,6 +90,8 @@ public class ArithmeticOperator extends Operator{
 
 		if(a.is(Type.word) && b.is(Type.word)) {
 			a.W = a.W.applyOperator(b.W, op, print, prefix, log);
+			a.M = a.M.and(b.M, print, prefix+" ", log);
+			a.list_of_identifiers_to_quantify.addAll(b.list_of_identifiers_to_quantify);
 			S.push(a);
 			return;
 		}

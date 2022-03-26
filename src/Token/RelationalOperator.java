@@ -45,7 +45,7 @@ public class RelationalOperator extends Operator{
 		Expression b = S.pop();
 		Expression a = S.pop();
 		
-		if((a.is(Type.numberLiteral) || a.is(Type.alphabetLetter)) && (a.is(Type.numberLiteral) || b.is(Type.alphabetLetter))){
+		if((a.is(Type.numberLiteral) || a.is(Type.alphabetLetter)) && (b.is(Type.numberLiteral) || b.is(Type.alphabetLetter))){
 			S.push(new Expression(a+op+b,new Automaton(compare(a.constant,b.constant))));
 			return;
 		}
@@ -94,8 +94,8 @@ public class RelationalOperator extends Operator{
 			Automaton M = a.W.compare(b.W, op,print,prefix+" ",log);
 			M = M.and(a.M,print,prefix+" ",log);
 			M = M.and(b.M,print,prefix+" ",log);
-			M.quantify(new HashSet<String>(a.list_of_identifiers_to_quantify),print,prefix+" ",log);
-			M.quantify(new HashSet<String>(b.list_of_identifiers_to_quantify),print,prefix+" ",log);
+			M.quantify(new HashSet<>(a.list_of_identifiers_to_quantify),print,prefix+" ",log);
+			M.quantify(new HashSet<>(b.list_of_identifiers_to_quantify),print,prefix+" ",log);
 			S.push(new Expression(a+op+b,M));
 		}
 		else if(a.is(Type.word) && (b.is(Type.numberLiteral) || b.is(Type.alphabetLetter))){

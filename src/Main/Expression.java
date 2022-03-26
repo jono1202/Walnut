@@ -119,16 +119,15 @@ public class Expression {
 	}
 
 	/**
-	 * Transforms a word expression to an arithmetic expression. For sake of example, suppose the word is T[M(a)]
-	 * for some automaton M. Then this transforms the expression into the arithmetic expression T[M(a)] = b
+	 * Transforms a word expression to an arithmetic expression. For sake of example, suppose the word is T[a]
+	 * Then this transforms the expression into the arithmetic expression T[a] = b
 	 * where b is the identifier. This is used to perform arithmetic on the output of words.
 	 * In detail, the resulting the arithmetic expression has automata with the equivalent logical statement:
-	 * (a,b): Eb (T[M(a)] = @0 => b = 0) & (T[M(a)] = @1 => b = 1)
-	 * With more statements of the form (T[M(a)] = @i => b = i) for each output i.
-	 * It is clear why we need to specify the number system, since we need some way to interpret any integer.
+	 * (a,b): Eb (T[a] = @0 => b = 0) & (T[a] = @1 => b = 1)
+	 * With more statements of the form (T[a] = @i => b = i) for each output i.
 	 * Moreover, if the output consists of negative numbers, but the number system is non-negative, then
 	 * we throw an error.
-	 * @param identifier The identifier b we want to assign the arithmetic expression.
+	 * @param identifier The identifier b we want to assign to the arithmetic expression.
 	 * @param numberSystem The number system we used to interpret the output of the automata
 	 * @throws Exception
 	 */
@@ -141,13 +140,13 @@ public class Expression {
 		for(int o : W.O) {
 			Automaton N = W.clone();
 			N.compare(o, "=",print,prefix+" ",log);
-			N.quantify(new HashSet<>(list_of_identifiers_to_quantify),print,prefix+" ",log);
 			Automaton C = numberSystem.get(o);
 			C.bind(identifier);
 			N = N.imply(C, print, prefix+" ",log);
 			O = O.and(N,print,prefix+" ",log);
 		}
 		O = O.and(M,print,prefix+" ",log);
+		O.quantify(new HashSet<>(list_of_identifiers_to_quantify),print,prefix+" ",log);
 		M = O;
 		this.identifier = identifier;
 		T = Type.arithmetic;
