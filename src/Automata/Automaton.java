@@ -1033,6 +1033,19 @@ public class Automaton {
                 case ">=":
                     N.O.add((O.get(p) >= M.O.get(q)) ? 1 : 0);
                     break;
+                case "+":
+                    N.O.add(O.get(p) + M.O.get(q));
+                    break;
+                case "-":
+                    N.O.add(O.get(p) - M.O.get(q));
+                    break;
+                case "*":
+                    N.O.add(O.get(p) * M.O.get(q));
+                    break;
+                case "/":
+                    if(M.O.get(q) == 0)throw new Exception("division by zero");
+                    N.O.add(Math.floorDiv(O.get(p), M.O.get(q)));
+                    break;
                 case "combine":
                     N.O.add((M.O.get(q) == 1) ? combineOutputs.get(combineIndex) : O.get(p));
                     break;
@@ -1858,6 +1871,124 @@ public class Automaton {
     }
 
     /**
+     * The operator can be one of "+" "-" "*" "/".
+     * For example if operator = "+" then this method returns
+     * a DFAO that outputs this[x] + W[x] on input x.
+     * To be used only when this automaton and M are DFAOs (words).
+     * @param W
+     * @param operator
+     * @return
+     * @throws Exception
+     */
+    public Automaton applyOperator(Automaton W, String operator,boolean print, String prefix,StringBuffer log) throws Exception{
+        long timeBefore = System.currentTimeMillis();
+        if(print){
+            String msg = prefix + "applying operator ("+operator+"):" + Q + " states - " + W.Q + " states";
+            log.append(msg + UtilityMethods.newLine());
+            System.out.println(msg);
+        }
+        Automaton M = crossProduct(W,operator,print,prefix+" ",log);
+        M.minimizeWithOuput(print,prefix+" ",log);
+        long timeAfter = System.currentTimeMillis();
+        if(print){
+            String msg = prefix + "applied operator ("+operator+ "):" + Q + " states - "+(timeAfter-timeBefore)+"ms";
+            log.append(msg + UtilityMethods.newLine());
+            System.out.println(msg);
+        }
+        return M;
+    }
+
+    /**
+     * The operator can be one of "_" "+" "-" "/" "*".
+     * For example if operator = "+" then this method returns
+     * a DFAO that outputs this[x]+o on input x.
+     * To be used only when this automaton and M are DFAOs (words).
+     * @param operator
+     * @return
+     * @throws Exception
+     */
+    public void applyOperator(String operator,int o,boolean print, String prefix,StringBuffer log) throws Exception{
+        long timeBefore = System.currentTimeMillis();
+        if(print){
+            String msg = prefix + "applying operator ("+operator+"):" + Q + " states";
+            log.append(msg + UtilityMethods.newLine());
+            System.out.println(msg);
+        }
+        for(int p = 0 ; p < Q;p++){
+            switch(operator){
+                case "+":
+                    O.set(p,O.get(p)+o);
+                    break;
+                case "-":
+                    O.set(p,O.get(p)-o);
+                    break;
+                case "*":
+                    O.set(p,O.get(p)*o);
+                    break;
+                case "/":
+                    if(o == 0)throw new Exception("division by zero");
+                    O.set(p,O.get(p)/o);
+                    break;
+                case "_":
+                    O.set(p,-O.get(p));
+                    break;
+            }
+        }
+        minimizeWithOuput(print,prefix+" ",log);
+        long timeAfter = System.currentTimeMillis();
+        if(print){
+            String msg = prefix + "applied operator ("+operator+ "):" + Q + " states - "+(timeAfter-timeBefore)+"ms";
+            log.append(msg + UtilityMethods.newLine());
+            System.out.println(msg);
+        }
+    }
+
+    /**
+     * The operator can be one of "_" "+" "-" "/" "*".
+     * For example if operator = "+" then this method returns
+     * a DFAO that outputs o+this[x] on input x.
+     * To be used only when this automaton and M are DFAOs (words).
+     * @param operator
+     * @return
+     * @throws Exception
+     */
+    public void applyOperator(int o,String operator,boolean print, String prefix,StringBuffer log) throws Exception{
+        long timeBefore = System.currentTimeMillis();
+        if(print){
+            String msg = prefix + "applying operator ("+operator+"):" + Q + " states";
+            log.append(msg + UtilityMethods.newLine());
+            System.out.println(msg);
+        }
+        for(int p = 0 ; p < Q;p++){
+            switch(operator){
+                case "+":
+                    O.set(p,o+O.get(p));
+                    break;
+                case "-":
+                    O.set(p,o-O.get(p));
+                    break;
+                case "*":
+                    O.set(p,o*O.get(p));
+                    break;
+                case "/":
+                    if(O.get(p) == 0)throw new Exception("division by zero");
+                    O.set(p,o/O.get(p));
+                    break;
+                case "_":
+                    O.set(p,-O.get(p));
+                    break;
+            }
+        }
+        minimizeWithOuput(print,prefix+" ",log);
+        long timeAfter = System.currentTimeMillis();
+        if(print){
+            String msg = prefix + "applied operator ("+operator+ "):" + Q + " states - "+(timeAfter-timeBefore)+"ms";
+            log.append(msg + UtilityMethods.newLine());
+            System.out.println(msg);
+        }
+    }
+
+    /**
      * The operator can be one of "<" ">" "=" "!=" "<=" ">=".
      * For example if operator = "<" then this method returns
      * a DFA that accepts x iff this[x] < W[x] lexicographically.
@@ -1890,7 +2021,6 @@ public class Automaton {
      * For example if operator = "<" then this method changes the word automaton
      * to a DFA that accepts x iff this[x] < o lexicographically.
      * To be used only when this automaton is a DFAO (word).
-     * @param W
      * @param operator
      * @return
      * @throws Exception

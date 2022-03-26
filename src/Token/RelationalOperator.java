@@ -45,20 +45,54 @@ public class RelationalOperator extends Operator{
 		Expression b = S.pop();
 		Expression a = S.pop();
 		
-		if(a.is(Type.alphabetLetter) && b.is(Type.alphabetLetter)){
+		if((a.is(Type.numberLiteral) || a.is(Type.alphabetLetter)) && (b.is(Type.numberLiteral) || b.is(Type.alphabetLetter))){
 			S.push(new Expression(a+op+b,new Automaton(compare(a.constant,b.constant))));
 			return;
 		}
-		else if(a.is(Type.numberLiteral) && b.is(Type.numberLiteral)){
-			S.push(new Expression(a+op+b,new Automaton(compare(a.constant,b.constant ))));	
-			return;
-		}
-		String preStep = prefix + "computing " + a+op+b;  
+		String preStep = prefix + "computing " + a+op+b;
 		log.append(preStep + UtilityMethods.newLine());
-		if(print){
+		if(print) {
 			System.out.println(preStep);
 		}
-		if((a.is(Type.arithmetic) || a.is(Type.variable))
+		if( (a.is(Type.word) && (b.is(Type.arithmetic) || b.is(Type.variable))) ||
+				((a.is(Type.arithmetic) || a.is(Type.variable)) && b.is(Type.word)) ) {
+			/* We rewrite T[a] < b as
+			 * (T[a] = @0 => 0 < b) & (T[a] = @1 => 1 < b)
+			 * With more statements of the form (T[a] = @i => i < b) for each output i.
+			 */
+			Expression word; Expression arithmetic; boolean reverse;
+			if(a.is(Type.word)) {
+				word = a;
+				arithmetic = b;
+				reverse = false;
+			} else {
+				word = b;
+				arithmetic = a;
+				reverse = true;
+			}
+
+			Automaton M = new Automaton(true);
+			for(int o : word.W.O) {
+				Automaton N = word.W.clone();
+				N.compare(o, "=",print,prefix+" ",log);
+				Automaton C;
+				if (reverse) {
+					C = number_system.comparison(arithmetic.identifier, o, op);
+				} else {
+					C = number_system.comparison(o, arithmetic.identifier, op);
+				}
+				N = N.imply(C, print, prefix+" ",log);
+				M = M.and(N,print,prefix+" ",log);
+			}
+			M = M.and(word.M,print,prefix+" ",log);
+			M.quantify(new HashSet<>(word.list_of_identifiers_to_quantify),print,prefix+" ",log);
+			if(arithmetic.is(Type.arithmetic)){
+				M = M.and(arithmetic.M,print,prefix+" ",log);
+				M.quantify(arithmetic.identifier,print,prefix+" ",log);
+			}
+			S.push(new Expression(word.toString(), M));
+		}
+		else if((a.is(Type.arithmetic) || a.is(Type.variable))
 				&& (b.is(Type.arithmetic) || b.is(Type.variable))){
 			Automaton M = number_system.comparison(a.identifier, b.identifier, op);
 			if(a.is(Type.arithmetic)){
@@ -72,7 +106,7 @@ public class RelationalOperator extends Operator{
 			
 			S.push(new Expression(a+op+b,M));
 		}
-		else if(a.is(Type.numberLiteral) && ((b.is(Type.arithmetic) || b.is(Type.variable)))){
+		else if((a.is(Type.numberLiteral) || a.is(Type.alphabetLetter)) && (b.is(Type.arithmetic) || b.is(Type.variable))){
 			Automaton M = number_system.comparison(a.constant, b.identifier, op);
 			if(b.is(Type.arithmetic)){
 				M = M.and(b.M,print,prefix+" ",log);
@@ -80,8 +114,7 @@ public class RelationalOperator extends Operator{
 			}
 			S.push(new Expression(a+op+b,M));
 		}
-		else if((a.is(Type.arithmetic) || a.is(Type.variable))
-				&& b.is(Type.numberLiteral)){
+		else if((a.is(Type.arithmetic) || a.is(Type.variable)) && (b.is(Type.numberLiteral) || b.is(Type.alphabetLetter))){
 			Automaton M = number_system.comparison(a.identifier, b.constant, op);
 			if(a.is(Type.arithmetic)){
 				M = M.and(a.M,print,prefix+" ",log);
@@ -93,18 +126,18 @@ public class RelationalOperator extends Operator{
 			Automaton M = a.W.compare(b.W, op,print,prefix+" ",log);
 			M = M.and(a.M,print,prefix+" ",log);
 			M = M.and(b.M,print,prefix+" ",log);
-			M.quantify(new HashSet<String>(a.list_of_identifiers_to_quantify),print,prefix+" ",log);
-			M.quantify(new HashSet<String>(b.list_of_identifiers_to_quantify),print,prefix+" ",log);			
+			M.quantify(new HashSet<>(a.list_of_identifiers_to_quantify),print,prefix+" ",log);
+			M.quantify(new HashSet<>(b.list_of_identifiers_to_quantify),print,prefix+" ",log);
 			S.push(new Expression(a+op+b,M));
 		}
-		else if(a.is(Type.word) && b.is(Type.alphabetLetter)){
+		else if(a.is(Type.word) && (b.is(Type.numberLiteral) || b.is(Type.alphabetLetter))){
 			a.W.compare(b.constant, op,print,prefix+" ",log);
 			Automaton M = a.W;
 			M = M.and(a.M,print,prefix+" ",log);
 			M.quantify(new HashSet<String>(a.list_of_identifiers_to_quantify),print,prefix+" ",log);
 			S.push(new Expression(a+op+b,M));
 		}
-		else if(a.is(Type.alphabetLetter) && b.is(Type.word)){
+		else if((a.is(Type.numberLiteral) || a.is(Type.alphabetLetter)) && b.is(Type.word)){
 			b.W.compare(a.constant, reverseOperator(op),print,prefix+" ",log);
 			Automaton M = b.W;
 			M = M.and(b.M,print,prefix+" ",log);
