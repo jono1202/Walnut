@@ -54,13 +54,41 @@ public class RelationalOperator extends Operator{
 		if(print) {
 			System.out.println(preStep);
 		}
-		else if(a.is(Type.word) && (b.is(Type.arithmetic) || b.is(Type.variable))) {
-			a.wordToArithmetic(getUniqueString(), number_system, print, prefix, log);
+		if( (a.is(Type.word) && (b.is(Type.arithmetic) || b.is(Type.variable))) ||
+				((a.is(Type.arithmetic) || a.is(Type.variable)) && b.is(Type.word)) ) {
+			Expression word; Expression arithmetic; boolean reverse;
+			if(a.is(Type.word)) {
+				word = a;
+				arithmetic = b;
+				reverse = false;
+			} else {
+				word = b;
+				arithmetic = a;
+				reverse = true;
+			}
+
+			Automaton M = new Automaton(true);
+			for(int o : word.W.O) {
+				Automaton N = word.W.clone();
+				N.compare(o, "=",print,prefix+" ",log);
+				Automaton C;
+				if (reverse) {
+					C = number_system.comparison(arithmetic.identifier, o, op);
+				} else {
+					C = number_system.comparison(o, arithmetic.identifier, op);
+				}
+				N = N.imply(C, print, prefix+" ",log);
+				M = M.and(N,print,prefix+" ",log);
+			}
+			M = M.and(word.M,print,prefix+" ",log);
+			M.quantify(new HashSet<>(word.list_of_identifiers_to_quantify),print,prefix+" ",log);
+			if(arithmetic.is(Type.arithmetic)){
+				M = M.and(arithmetic.M,print,prefix+" ",log);
+				M.quantify(arithmetic.identifier,print,prefix+" ",log);
+			}
+			S.push(new Expression(word.toString(), M));
 		}
-		if((a.is(Type.arithmetic) || a.is(Type.variable)) && b.is(Type.word)) {
-			b.wordToArithmetic(getUniqueString(), number_system, print, prefix, log);
-		}
-		if((a.is(Type.arithmetic) || a.is(Type.variable))
+		else if((a.is(Type.arithmetic) || a.is(Type.variable))
 				&& (b.is(Type.arithmetic) || b.is(Type.variable))){
 			Automaton M = number_system.comparison(a.identifier, b.identifier, op);
 			if(a.is(Type.arithmetic)){
@@ -145,5 +173,43 @@ public class RelationalOperator extends Operator{
 		default:
 			return "";
 		}
+	}
+
+	private Expression wordApplyOperator(Expression a, String op, Expression b,
+												 boolean print, String prefix, StringBuffer log) throws Exception {
+		Expression word; Expression arithmetic; boolean reverse;
+		if(a.is(Type.word) && (b.is(Type.arithmetic) || b.is(Type.variable))) {
+			word = a;
+			arithmetic = b;
+			reverse = false;
+		} else if ((a.is(Type.arithmetic) || a.is(Type.variable)) && b.is(Type.word)) {
+			word = b;
+			arithmetic = a;
+			reverse = true;
+		} else {
+			throw new Exception("Expressions " + a + " & " + b + " must be of type word & arithmetic/variable" +
+					"or arithmetic/variable & word");
+		}
+
+		Automaton M = new Automaton(true);
+		for(int o : word.W.O) {
+			Automaton N = word.W.clone();
+			N.compare(o, "=",print,prefix+" ",log);
+			Automaton C;
+			if (reverse) {
+				C = number_system.comparison(arithmetic.identifier, o, op);
+			} else {
+				C = number_system.comparison(o, arithmetic.identifier, op);
+			}
+			N = N.imply(C, print, prefix+" ",log);
+			M = M.and(N,print,prefix+" ",log);
+		}
+		M = M.and(word.M,print,prefix+" ",log);
+		M.quantify(new HashSet<>(word.list_of_identifiers_to_quantify),print,prefix+" ",log);
+		if(arithmetic.is(Type.arithmetic)){
+			M = M.and(arithmetic.M,print,prefix+" ",log);
+			M.quantify(arithmetic.identifier,print,prefix+" ",log);
+		}
+		return new Expression(word.toString(), M);
 	}
 }

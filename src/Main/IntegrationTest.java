@@ -619,55 +619,70 @@ public class IntegrationTest {
 		L.add("eval test459 \"3 / TH[a] = 1\";"); // error: division by zero
 		L.add("eval test460 \"T[a] + b = 1\";");
 		L.add("eval test461 \"a - (T[a] + b) = 0\";");
-		L.add("eval test462 \"?msd_neg_2 _T[a] = _1\";");
+		L.add("eval test462 \"?msd_neg_2 T[a] - b = 1\";");
+		L.add("eval test463 \"?msd_neg_2 _T[a] = _1\";");
 
-		L.add("eval test463 \"T[a] + (b + c) = 1\";");
-		L.add("eval test464 \"?msd_neg_2 T[a] - (b + c) = 1\";");
-		L.add("eval test465 \"T[a] * (b + c) = 1\";");
-		L.add("eval test466 \"T[a] / (b + c) = 1\";");
 
-		L.add("eval test467 \"T[a] < b\";");
-		L.add("eval test468 \"T[a] + b > a\";");
-		L.add("eval test469 \"T[a] < b + c\";");
-		L.add("eval test470 \"?msd_neg_2 T[a] > b + c\";");
-		L.add("eval test471 \"T[a] < T[b]\";");
+		L.add("eval test464 \"T[a] + (b + c) = 1\";");
+		L.add("eval test465 \"?msd_neg_2 T[a] - (b + c) = 1\";");
+		L.add("eval test466 \"T[a] * (b + c) = 1\";");
+		L.add("eval test467 \"?msd_neg_2 (b + c) / TEST[a] = 1\";");
+		L.add("eval test468 \"T[a<5] + (b + c) = 1\";");
+		L.add("eval test469 \"?msd_neg_2 T[a<5] - (b + c) = 1\";");
+		L.add("eval test470 \"T[a<5] * (b + c) = 1\";");
+		L.add("eval test471 \"?msd_neg_2 (b + c) / TEST[a<5] = 1\";");
+		L.add("eval test472 \"T[a+d] + (b + c) = 1\";");
+		L.add("eval test473 \"?msd_neg_2 T[a+d] - (b + c) = 1\";");
+		L.add("eval test474 \"T[a+d] * (b + c) = 1\";");
+		L.add("eval test475 \"?msd_neg_2 (b + c) / TEST[a+d] = 1\";");
+		L.add("eval test476 \"TH[a] / (b + c) = 1\";"); // error: constants cannot be divided by variables
 
-		L.add("eval test472 \"T[a < 5] < b\";");
-		L.add("eval test473 \"T[a < 5] + b > a\";");
-		L.add("eval test474 \"T[a < 5] < b + c\";");
-		L.add("eval test475 \"?msd_neg_2 T[?msd_neg_2 a < 5] > b + c\";");
-		L.add("eval test476 \"T[a < 5] < T[b > 5]\";");
 
-		L.add("eval test477 \"T[a + c] < b\";");
-		L.add("eval test478 \"T[a + c] + b > a\";");
-		L.add("eval test479 \"T[a + d] < b + c\";");
-		L.add("eval test480 \"?msd_neg_2 T[?msd_neg_2 a + d] > b + c\";");
-		L.add("eval test481 \"T[a + c] < T[b - d]\";");
+		L.add("eval test477 \"T[a] < b\";");
+		L.add("eval test478 \"T[a] + b > a\";");
+		L.add("eval test479 \"T[a] < b + c\";");
+		L.add("eval test480 \"?msd_neg_2 T[a] > b + c\";");
+		L.add("eval test481 \"T[a] < T[b]\";");
+		L.add("eval test482 \"T[a < 5] < b\";");
+		L.add("eval test483 \"T[a < 5] + b > a\";");
+		L.add("eval test484 \"T[a < 5] < b + c\";");
+		L.add("eval test485 \"?msd_neg_2 T[?msd_neg_2 a < 5] > b + c\";");
+		L.add("eval test486 \"T[a < 5] < T[b > 5]\";");
+		L.add("eval test487 \"T[a + c] < b\";");
+		L.add("eval test488 \"T[a + c] + b > a\";");
+		L.add("eval test489 \"T[a + d] < b + c\";");
+		L.add("eval test490 \"?msd_neg_2 T[?msd_neg_2 a + d] > b + c\";");
+		L.add("eval test491 \"T[a + c] < T[b - d]\";");
 
-		L.add("eval test482 \"TH[a] + TH[b] = 0\";");
-		L.add("eval test483 \"TH[a] - TH[b] = 0\";");
-		L.add("eval test484 \"TH[a] * TH[b] = 4\";");
-		L.add("eval test485 \"TH[a] = TH[b]\";");
-		L.add("eval test486 \"T[a] <= T[b]\";");
 
-		L.add("eval test487 \"TH[a < 5] + TH[b > 5] = 0\";");
-		L.add("eval test488 \"TH[a < 5] - TH[b > 5] = 0\";");
-		L.add("eval test489 \"TH[a < 5] * TH[b > 5] = 4\";");
-		L.add("eval test490 \"TH[a+c] = TH[b>5]\";");
-		L.add("eval test491 \"T[a+c] <= T[b>5]\";");
-
-		L.add("eval test492 \"TH[a+c] + TH[b-d] = 0\";");
-		L.add("eval test493 \"TH[a+c] - TH[b-d] = 0\";");
-		L.add("eval test494 \"TH[a+c] * TH[b-d] = 4\";");
-		L.add("eval test495 \"TH[a+c] = TH[b-d]\";");
-		L.add("eval test496 \"T[a+c] <= T[b-d]\";");
-
-		L.add("eval test497 \"TH[a+c] + TH[b > 5] = 0\";");
-		L.add("eval test498 \"TH[a+c] - TH[b > 5] = 0\";");
-		L.add("eval test499 \"TH[a+c] * TH[b > 5] = 4\";");
-		L.add("eval test500 \"TH[a+c] = TH[b>5]\";");
-		L.add("eval test501 \"T[a+c] <= T[b>5]\";");
-
+		L.add("eval test492 \"TH[a] + TH[b] = 0\";");
+		L.add("eval test493 \"TH[a] - TH[b] = 0\";");
+		L.add("eval test494 \"TH[a] * TH[b] = 4\";");
+		L.add("eval test495 \"?msd_neg_2 TH[a] / TEST[b] = _2\";");
+		L.add("eval test496 \"?msd_neg_2 TH[a] / TEST[b] = 2\";");
+		L.add("eval test497 \"TH[a] = TH[b]\";");
+		L.add("eval test498 \"T[a] <= T[b]\";");
+		L.add("eval test499 \"TH[a<5] + TH[b>5] = 0\";");
+		L.add("eval test500 \"TH[a<5] - TH[b>5] = 0\";");
+		L.add("eval test501 \"TH[a<5] * TH[b>5] = 4\";");
+		L.add("eval test502 \"?msd_neg_2 TH[a<5] / TEST[b>5] = _2\";");
+		L.add("eval test503 \"?msd_neg_2 TH[a<5] / TEST[b>5] = 2\";");
+		L.add("eval test504 \"TH[a<5] = TH[b>5]\";");
+		L.add("eval test505 \"T[a<5] <= T[b>5]\";");
+		L.add("eval test506 \"TH[a+c] + TH[b-d] = 0\";");
+		L.add("eval test507 \"TH[a+c] - TH[b-d] = 0\";");
+		L.add("eval test508 \"TH[a+c] * TH[b-d] = 4\";");
+		L.add("eval test509 \"?msd_neg_2 TH[a+c] / TEST[b-d] = _2\";");
+		L.add("eval test510 \"?msd_neg_2 TH[a+c] / TEST[b-d] = 2\";");
+		L.add("eval test511 \"TH[a+c] = TH[b-d]\";");
+		L.add("eval test512 \"T[a+c] <= T[b-d]\";");
+		L.add("eval test513 \"TH[a<5] + TH[b-d] = 0\";");
+		L.add("eval test514 \"TH[a<5] - TH[b-d] = 0\";");
+		L.add("eval test515 \"TH[a<5] * TH[b-d] = 4\";");
+		L.add("eval test516 \"?msd_neg_2 TH[a<5] / TEST[b-d] = _2\";");
+		L.add("eval test517 \"?msd_neg_2 TH[a<5] / TEST[b-d] = 2\";");
+		L.add("eval test518 \"TH[a<5] = TH[b-d]\";");
+		L.add("eval test519 \"T[a<5] <= T[b-d]\";");
 	}
 	public void runPerformanceTest(String name,int numberOfRuns) throws Exception{
 		PrintWriter out = new PrintWriter(new FileOutputStream(new File(directoryAddress+performanceTestFileName), true /* append = true */));
@@ -731,8 +746,8 @@ public class IntegrationTest {
 				}
 
 				if((actual.result == null && expected.result != null) ||
-				   (actual.result != null && expected.result == null) ||
-				   !actual.result.equals(expected.result)){
+						(actual.result != null && expected.result == null) ||
+						!actual.result.equals(expected.result)){
 					failedTestsCount++;
 					automataFailedTestsCount++;
 					System.out.println("Test " + i + " failed! Actual and expected automata do not conform.\n");

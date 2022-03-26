@@ -17,7 +17,6 @@
 */
 
 package Token;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Stack;
 
@@ -130,39 +129,69 @@ public class ArithmeticOperator extends Operator{
 		if(print){
 			System.out.println(preStep);
 		}
-		if(a.is(Type.word) && (b.is(Type.arithmetic) || b.is(Type.variable))) {
-			a.wordToArithmetic(getUniqueString(), number_system, print, prefix, log);
-		}
-		else if((a.is(Type.arithmetic) || a.is(Type.variable)) && b.is(Type.word)) {
-			b.wordToArithmetic(getUniqueString(), number_system, print, prefix, log);
-		}
-
-		if(a.is(Type.numberLiteral)){
-			if(a.constant == 0 && op.equals("*")){
-				S.push(new Expression("0",0,number_system));
-				return;
+		if( (a.is(Type.word) && (b.is(Type.arithmetic) || b.is(Type.variable))) ||
+				((a.is(Type.arithmetic) || a.is(Type.variable)) && b.is(Type.word)) ) {
+			Expression word; Expression arithmetic; boolean reverse;
+			if(a.is(Type.word)) {
+				word = a;
+				arithmetic = b;
+				reverse = false;
+			} else {
+				word = b;
+				arithmetic = a;
+				reverse = true;
 			}
-			else
-				M = number_system.arithmetic(a.constant, b.identifier, c, op);
-		}
-		else if(b.is(Type.numberLiteral)){
-			if(b.constant == 0 && op.equals("*")){
-				S.push(new Expression("0",0,number_system));
-				return;
-			}
-			M = number_system.arithmetic(a.identifier, b.constant, c, op);
-		}
-		else{
-			M = number_system.arithmetic(a.identifier, b.identifier, c, op);
-		}
 
-		if(a.is(Type.arithmetic)){
-			M = M.and(a.M,print,prefix+" ",log);
-			M.quantify(a.identifier,print,prefix+" ",log);
-		}
-		if(b.is(Type.arithmetic)){
-			M = M.and(b.M,print,prefix+" ",log);
-			M.quantify(b.identifier,print,prefix+" ",log);
+			M = new Automaton(true);
+			for(int o : word.W.O) {
+				Automaton N = word.W.clone();
+				N.compare(o, "=",print,prefix+" ",log);
+				Automaton C;
+				if(o == 0 && op.equals("*")){
+					C = number_system.get(0);
+					C.bind(c);
+				} else if (reverse) {
+					C = number_system.arithmetic(arithmetic.identifier, o, c, op);
+				} else {
+					C = number_system.arithmetic(o, arithmetic.identifier,c, op);
+				}
+				N = N.imply(C, print, prefix+" ",log);
+				M = M.and(N,print,prefix+" ",log);
+			}
+			M = M.and(word.M,print,prefix+" ",log);
+			M.quantify(new HashSet<>(word.list_of_identifiers_to_quantify),print,prefix+" ",log);
+			if(arithmetic.is(Type.arithmetic)){
+				M = M.and(arithmetic.M,print,prefix+" ",log);
+				M.quantify(arithmetic.identifier,print,prefix+" ",log);
+			}
+		} else {
+			if(a.is(Type.numberLiteral)){
+				if(a.constant == 0 && op.equals("*")){
+					S.push(new Expression("0",0,number_system));
+					return;
+				}
+				else
+					M = number_system.arithmetic(a.constant, b.identifier, c, op);
+			}
+			else if(b.is(Type.numberLiteral)){
+				if(b.constant == 0 && op.equals("*")){
+					S.push(new Expression("0",0,number_system));
+					return;
+				}
+				M = number_system.arithmetic(a.identifier, b.constant, c, op);
+			}
+			else{
+				M = number_system.arithmetic(a.identifier, b.identifier, c, op);
+			}
+
+			if(a.is(Type.arithmetic)){
+				M = M.and(a.M,print,prefix+" ",log);
+				M.quantify(a.identifier,print,prefix+" ",log);
+			}
+			if(b.is(Type.arithmetic)){
+				M = M.and(b.M,print,prefix+" ",log);
+				M.quantify(b.identifier,print,prefix+" ",log);
+			}
 		}
 		S.push(new Expression("("+a+op+b+")",M,c));
 		String postStep = prefix + "computed " + a+op+b;

@@ -1963,13 +1963,13 @@ public class Automaton {
         for(int p = 0 ; p < Q;p++){
             switch(operator){
                 case "+":
-                    O.set(p,O.get(p)+o);
+                    O.set(p,o+O.get(p));
                     break;
                 case "-":
-                    O.set(p,O.get(p)-o);
+                    O.set(p,o-O.get(p));
                     break;
                 case "*":
-                    O.set(p,O.get(p)*o);
+                    O.set(p,o*O.get(p));
                     break;
                 case "/":
                     if(O.get(p) == 0)throw new Exception("division by zero");
