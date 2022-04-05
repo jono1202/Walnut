@@ -978,37 +978,32 @@ public class NumberSystem {
 	 * @return
 	 * @throws Exception
 	 */
+	// a / n = b <=> Er,q a = q + r & q = n*b & n < r <= 0 if n < 0
 	private Automaton division(int n)throws Exception {
 		if(!is_neg && n < 0)throw new Exception("constant cannot be negative");
 		if(n == 0)throw new Exception("division by zero");
 		if(divisionsDynamicTable.containsKey(n))return divisionsDynamicTable.get(n);
-		Automaton R;
+		String a = "a",b = "b",r = "r",q = "q";
+		// We want to construct the following expressions
+		// a / n = b <=> Er,q a = q + r & q = n*b & n < r <= 0 if n < 0
+		// a / n = b <=> Er,q a = q + r & q = n*b & 0 <= r < n if n > 0
+		Automaton M = arithmetic(q,r,a,"+");
+		Automaton N = arithmetic(n,b,q,"*");
+		Automaton P1, P2;
 		if (n < 0) {
-			String a = "a",b = "b",c = "c";
-			// c = a/(-n)
-			Automaton M = getDivision(-n);
-			M.bind(a,c);
-			// Ec b + c = 0, c = a/(-n)
-			R = arithmetic(b,c,0, "+");
-			R = R.and(M, false, null, null);
-			R.quantify(c,false,null,null);
-			R.sortLabel();
+			// n < 0 <= 0
+			P1 = comparison(r,0, "<=");
+			P2 = comparison(r,n, ">");
 		} else { // n > 0
-			String a = "a",b = "b",r = "r",q = "q";
-			//a / n = b <=> Er,q a = q + r & q = n*b & 0 <= r < n
-			Automaton M = arithmetic(q,r,a,"+");
-			Automaton N = arithmetic(n,b,q,"*");
-
-			// -1 < r < n
-			Automaton P1 = comparison(r,0, ">=");
-			Automaton P2 = comparison(r,n, "<");
-			Automaton P = P1.and(P2,false,null,null);
-
-			R = M.and(N,false,null,null);
-			R = R.and(P,false,null,null);
-			R.quantify(q,r, is_msd,false,null,null);
-			R.sortLabel();
+			// 0 <= r < n
+			P1 = comparison(r,0, ">=");
+			P2 = comparison(r,n, "<");
 		}
+		Automaton P = P1.and(P2,false,null,null);
+		Automaton R = M.and(N,false,null,null);
+		R = R.and(P,false,null,null);
+		R.quantify(q,r, is_msd,false,null,null);
+		R.sortLabel();
 		divisionsDynamicTable.put(n, R);
 		return R;
 	}
