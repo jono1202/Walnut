@@ -18,6 +18,7 @@
 
 package Automata;
 import Main.GraphViz;
+import Main.TestCase;
 import Main.UtilityMethods;
 
 import java.io.BufferedReader;
@@ -724,12 +725,11 @@ public class Automaton {
      * Takes a list of labels and performs the existential quantifier over
      * the inputs with labels in listOfLabelsToQuantify. It simply eliminates inputs in listOfLabelsToQuantify.
      * After the quantification is done, we address the issue of
-     * leadingZeros or trailingZeors (depending on the value of leadingZeros), if all of the inputs
+     * leadingZeros or trailingZeros (depending on the value of leadingZeros), if all of the inputs
      * of the resulting automaton are of type arithmetic.
      * This is why we mandate that an input of type arithmetic must have 0 in its alphabet, also that
      * every number system must use 0 to denote its additive identity.
      * @param listOfLabelsToQuantify must contain at least one element. listOfLabelsToQuantify must be a subset of this.label.
-     * @param leadingZero determines which of leadingZeros or trailingZeros should be addressed after quantification.
      * @return
      */
     public void quantify(Set<String> listOfLabelsToQuantify, boolean print, String prefix,StringBuffer log)throws Exception{
@@ -1442,9 +1442,6 @@ public class Automaton {
     // is given. This is true iff there exists a cycle in a minimized version of the automaton, which previously had leading or
     // trailing zeroes removed according to whether it was msd or lsd
     public String infinite() throws Exception {
-        // make sure the automaton is minimized
-        minimize(false, "", null);
-
         for (int i=0; i<Q; i++) {
             visited = new HashSet<Integer>();
             started = i;
@@ -2903,6 +2900,97 @@ public class Automaton {
             log.append(msg + UtilityMethods.newLine());
             System.out.println(msg);
         }
+    }
+
+    /**
+     * Used for the "I" quantifier. If some input is in msd, then we remove leading zeroes,
+     * if some input is in lsd, then we remove trailing zeroes, otherwise, we do nothing.
+     * To do this, for each input, we construct an automaton which accepts if the leading/trailing input is non-zero,
+     * union all these automata together, and intersect with our original automaton.
+     * @param listOfLabels
+     * @return
+     * @throws Exception
+     */
+    public Automaton removeLeadingZeroes(List<String> listOfLabels, boolean print, String prefix, StringBuffer log) throws Exception {
+        for(String s:listOfLabels) {
+            if(!label.contains(s)) {
+                throw new Exception( "Variable " + s + " in the list of quantified variables is not a free variable.");
+            }
+        }
+        if(listOfLabels.size() == 0) {
+            return clone();
+        }
+        long timeBefore = System.currentTimeMillis();
+        if(print) {
+            String msg = prefix + "removing leading zeroes for:" + Q + " states";
+            log.append(msg + UtilityMethods.newLine());
+            System.out.println(msg);
+        }
+
+        List<Integer> listOfInputs = new ArrayList<Integer>();//extract the list of indices of inputs from the list of labels
+        for(String l:listOfLabels) {
+            listOfInputs.add(label.indexOf(l));
+        }
+        Automaton M = new Automaton(false);
+        for(int n:listOfInputs) {
+            Automaton N = removeLeadingZeroesHelper(n, print, prefix+" ", log);
+            M = M.or(N, print, prefix+" ", log);
+        }
+        M = and(M, print, prefix+" ", log);
+
+        long timeAfter = System.currentTimeMillis();
+        if(print){
+            String msg = prefix + "quantified:" + Q + " states - "+(timeAfter-timeBefore)+"ms";
+            log.append(msg + UtilityMethods.newLine());
+            System.out.println(msg);
+        }
+        return M;
+    }
+
+    /**
+     * Returns the automaton with the same alphabet as the current automaton, which requires the nth input to
+     * start with a non-zero symbol (if msd), end with a non-zero symbol (if lsd), otherwise, return the true
+     * automaton. The returned automaton is meant to be intersected with the current automaton to remove
+     * leading/trailing * zeroes from the nth input.
+     * @param n
+     * @return
+     * @throws Exception
+     */
+    private Automaton removeLeadingZeroesHelper(int n, boolean print, String prefix, StringBuffer log) throws Exception{
+        if (n >= A.size() || n < 0) {
+            throw new Exception("Cannot remove leading zeroes for the "
+                    + (n+1) + "-th input when automaton only has " + A.size() + " inputs.");
+        }
+
+        if (NS.get(n) == null) {
+            return new Automaton(true);
+        }
+
+        Automaton M = new Automaton();
+        M.Q = 2;
+        M.q0 = 0;
+        M.O.add(1);M.O.add(1);
+        M.d.add(new TreeMap<Integer,List<Integer>>());
+        M.d.add(new TreeMap<Integer,List<Integer>>());
+        M.NS = NS;
+        M.A = A;
+        M.label = label;
+        M.alphabetSize = alphabetSize;
+        M = M.clone();
+
+        List<Integer> dest = new ArrayList<Integer>();
+        dest.add(1);
+        for(int i = 0; i < alphabetSize; i++) {
+            List<Integer> list = decode(i);
+            if (list.get(n) != 0) {
+                M.d.get(0).put(i, new ArrayList<>(dest));
+            }
+            M.d.get(1).put(i, new ArrayList<>(dest));
+        }
+        if (!NS.get(n).isMsd()) {
+            M.reverse(print, prefix, log);
+        }
+        return M;
     }
 
     /**Returns the set of states reachable from the initial state by reading 0*

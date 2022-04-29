@@ -683,6 +683,11 @@ public class IntegrationTest {
 		L.add("eval test517 \"?msd_neg_2 TH[a<5] / TEST[b-d] = 2\";");
 		L.add("eval test518 \"TH[a<5] = TH[b-d]\";");
 		L.add("eval test519 \"T[a<5] <= T[b-d]\";");
+
+		// inf quantifier tests
+		L.add("eval test520 \"?lsd_10 Ix x > 0\";");
+		L.add("eval test521 \"?msd_10 Ix x + y = z & z <= 5\";");
+		L.add("eval test522 \"?msd_neg_10 Ix 2*x = y & y >5\";");
 	}
 	public void runPerformanceTest(String name,int numberOfRuns) throws Exception{
 		PrintWriter out = new PrintWriter(new FileOutputStream(new File(directoryAddress+performanceTestFileName), true /* append = true */));

@@ -29,7 +29,7 @@ public abstract class Operator extends Token{
 		return true;
 	}
 	public void put(List<Token> postOrder,Stack<Operator> S)throws Exception{
-		if(op.equals("(") || op.equals("E") || op.equals("A")){
+		if(op.equals("(") || op.equals("E") || op.equals("A") || op.equals("I")){
 			S.push(this);
 			return;
 		}
@@ -78,6 +78,7 @@ public abstract class Operator extends Token{
 			case "<=>":priority = 110;break;
 			case "E":priority = 150;break;
 			case "A":priority = 150;break;
+			case "I":priority = 150;break;
 			case "(":priority = 200;break;
 			default:
 				priority = Integer.MAX_VALUE;
