@@ -69,15 +69,15 @@ public class Predicate {
 		return number_system_Hash;
 	}
 
-	static String REGEXP_FOR_LOGICAL_OPERATORS = "\\G\\s*(`|\\^|\\&|\\~|\\||=>|<=>|E|A)";
-	static String REGEXP_FOR_LIST_OF_QUANTIFIED_VARIABLES = "\\G\\s*((\\s*([a-zA-Z&&[^AE]]\\w*)\\s*)(\\s*,\\s*([a-zA-Z&&[^AE]]\\w*)\\s*)*)";
+	static String REGEXP_FOR_LOGICAL_OPERATORS = "\\G\\s*(`|\\^|\\&|\\~|\\||=>|<=>|E|A|I)";
+	static String REGEXP_FOR_LIST_OF_QUANTIFIED_VARIABLES = "\\G\\s*((\\s*([a-zA-Z&&[^AEI]]\\w*)\\s*)(\\s*,\\s*([a-zA-Z&&[^AEI]]\\w*)\\s*)*)";
 	static String REGEXP_FOR_RELATIONAL_OPERATORS = "\\G\\s*(>=|<=|<|>|=|!=)";
 	static String REGEXP_FOR_ARITHMETIC_OPERATORS = "\\G\\s*(_|/|\\*|\\+|\\-)";
 	static String REGEXP_FOR_NUMBER_SYSTEM = "\\G\\s*\\?(((msd|lsd)_(\\d+|\\w+))|((msd|lsd)(\\d+|\\w+))|(msd|lsd)|(\\d+|\\w+))";
-	static String REGEXP_FOR_WORD = "\\G\\s*([a-zA-Z&&[^AE]]\\w*)\\s*\\[";
-	static String REGEXP_FOR_FUNCTION = "\\G\\s*\\$([a-zA-Z&&[^AE]]\\w*)\\s*\\(";
-	static String REGEXP_FOR_MACRO = "\\G(\\s*)\\#([a-zA-Z&&[^AE]]\\w*)\\s*\\(";
-	static String REGEXP_FOR_VARIABLE = "\\G\\s*([a-zA-Z&&[^AE]]\\w*)";
+	static String REGEXP_FOR_WORD = "\\G\\s*([a-zA-Z&&[^AEI]]\\w*)\\s*\\[";
+	static String REGEXP_FOR_FUNCTION = "\\G\\s*\\$([a-zA-Z&&[^AEI]]\\w*)\\s*\\(";
+	static String REGEXP_FOR_MACRO = "\\G(\\s*)\\#([a-zA-Z&&[^AEI]]\\w*)\\s*\\(";
+	static String REGEXP_FOR_VARIABLE = "\\G\\s*([a-zA-Z&&[^AEI]]\\w*)";
 	static String REGEXP_FOR_NUMBER_LITERAL = "\\G\\s*(\\d+)";
 	static String REGEXP_FOR_ALPHABET_LETTER = "\\G\\s*@(\\s*(\\+|\\-)?\\s*\\d+)";
 	static String REGEXP_FOR_LEFT_PARENTHESIS = "\\G\\s*\\(";
@@ -147,7 +147,7 @@ public class Predicate {
 			if(MATCHER_FOR_LOGICAL_OPERATORS.find(index)){
 				lastTokenWasOperator = true;
 				Matcher matcher = MATCHER_FOR_LOGICAL_OPERATORS;
-				if(matcher.group(1).equals("E") || matcher.group(1).equals("A")){
+				if(matcher.group(1).equals("E") || matcher.group(1).equals("A") || matcher.group(1).equals("I")){
 					if(!MATCHER_FOR_LIST_OF_QUANTIFIED_VARIABLES.find(matcher.end())){
 						throw new Exception(
 							"Operator " + matcher.group(1) +

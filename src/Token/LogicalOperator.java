@@ -49,7 +49,7 @@ public class LogicalOperator extends Operator{
 		if(S.size() < getArity())throw new Exception("operator " + op + " requires " + getArity()+ " operands");
 		
 		if(op.equals("~") || op.equals("`")){actNegationOrReverse(S,print,prefix,log);return;}
-		if(op.equals("E") || op.equals("A")){actQuantifier(S,print,prefix,log);return;}
+		if(op.equals("E") || op.equals("A") || op.equals("I")){actQuantifier(S,print,prefix,log);return;}
 		
 		Expression b = S.pop();
 		Expression a = S.pop();
@@ -132,11 +132,14 @@ public class LogicalOperator extends Operator{
 				M = operands.get(i).M;
 				if(op.equals("E")){
 					M.quantify(new HashSet<String>(list_of_identifiers_to_quantify),print,prefix+" ",log);
-				}
-				else{
+				} else if (op.equals("A")){
 					M.not(print,prefix+" ",log);
 					M.quantify(new HashSet<String>(list_of_identifiers_to_quantify),print,prefix+" ",log);
 					M.not(print,prefix+" ",log);
+				} else {
+					M = M.removeLeadingZeroes(list_of_identifiers_to_quantify, print, prefix+" ", log);
+					String infReg = M.infinite();
+					M = infReg.equals("") ? new Automaton(false) : new Automaton(true);
 				}
 			}
 		}

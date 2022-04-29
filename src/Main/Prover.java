@@ -909,35 +909,7 @@ public class Prover {
 		// When dealing with enumerating values (eg. inf and test commands), we remove leading zeroes in the case of msd
 		// and trailing zeroes in the case of lsd. To do this, we construct a reg subcommand that generates the complement
 		// of zero-prefixed strings for msd and zero suffixed strings for lsd, then intersect this with our original automaton.
-		String removeZeroesReg = "";
-		String zero = "";
-		if (M.A.size() == 1) {
-			zero = "0";
-		}
-		else {
-			zero = "[" + String.join(",", Collections.nCopies(M.A.size(), "0")) + "]";
-		}
-
-		removeZeroesReg += "reg " + name + "_rem0 ";
-		for (int i=0; i<M.A.size(); i++) {
-			String alphaString = M.A.get(i).toString();
-			alphaString = alphaString.substring(1, alphaString.length()-1);
-			alphaString = "{" + alphaString + "} ";
-			removeZeroesReg += alphaString;
-		}
-
-		if (M.NS.get(0).isMsd()) {
-			removeZeroesReg += "\"~(" + zero + ".*)\";";
-		}
-		else {
-			removeZeroesReg += "\"~(.*" + zero + ")\";";
-		}
-		TestCase retrieval = regCommand(removeZeroesReg);
-		Automaton R = retrieval.result.clone();
-		// and-ing automata uses the cross product routine, which requires labeled automata
 		M.randomLabel();
-		R.label = M.label;
-		M = M.and(R, false, null, null);
-		return M;
+		return M.removeLeadingZeroes(M.label, false, null, null);
 	}
 }
