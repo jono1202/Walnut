@@ -156,11 +156,19 @@ public class Prover {
 	 */
 	public static void main(String[] args) throws Exception {
 		UtilityMethods.setPaths();
+
+		// to create test cases, run the following lines:
 //		IntegrationTest IT = new IntegrationTest(true);
+//		IT.createTestCases();
+
+		// to run test cases, run the following lines:
+		// IntegrationTest IT = new IntegrationTest(true);
 //		IT.runTestCases();
+
+		// can also run these.
 //		IT.runPerformanceTest("Walnut with Valmari without refactoring", 5);
 //		IT.runPerformanceTest("Walnut with dk.bricks", 5);
-//		IT.createTestCases();
+		
 		run(args);
 	}
 

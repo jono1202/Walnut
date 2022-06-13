@@ -19,6 +19,7 @@
 //package Automata;
 //
 //import java.util.ArrayList;
+//import java.util.Arrays;
 //import java.util.List;
 //import java.util.TreeMap;
 //
@@ -140,7 +141,7 @@
 //            ArrayList<List<Integer>> hIterates = new ArrayList<List<Integer>>();
 //
 //            // hIterates[0] should just be [z] alone.
-//            hIterates.add([z]);
+//            hIterates.add(Arrays.asList(z));
 //
 //            // m will be the upper index. Note that m can be as large as needed.
 //            for (int m = 1; ; m++) {
@@ -158,12 +159,9 @@
 //
 //                        // each list of states that this transition goes to.
 //                        // we assuming it's a DFA for now, so this has length 1 we're assuming...
-//                        for (int r : M.d.get(x).get(l)) {
 //
-//                            // get the first index of M.d on state x and edge label l
-//                            // assuming it's a List and not an ArrayList<Integer>
-//                            mthPower.add(r[0]);
-//                        }
+//                        // get the first index of M.d on state x and edge label l
+//                        mthPower.add(M.d.get(x).get(l).get(0));
 //
 //                    }
 //                }
@@ -194,7 +192,6 @@
 //
 //                        int mState = s;
 //
-//                        // index backwards.
 //                        for (int i = 0; i < hIterates.get(m).size(); i++) {
 //                            /**
 //                             * This will be an incremental value,
