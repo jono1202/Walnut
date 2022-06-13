@@ -98,7 +98,8 @@ public class Automaton {
 
     /**
      *  Input Alphabet.
-     *  For example when A = [[-1,1],[2,3]], the first and the second inputs are over alphabets {-1,1} and {2,3} respectively.
+     *  For example when A = [[-1,1],[2,3]], the first and the second inputs are over alphabets
+     *  {-1,1} and {2,3} respectively.
      *  Remember that the input to an automaton is a tuple (a pair in this example).
      *  For example a state might make a transition on input (1,3). Here the
      *  first input is 1 and the second input is 3.
@@ -396,10 +397,14 @@ public class Automaton {
 
     public Automaton() {
         TRUE_FALSE_AUTOMATON = false;
+
         A = new ArrayList<List<Integer>>();
+
         NS = new ArrayList<NumberSystem>();
         encoder = null;
+
         O = new ArrayList<Integer>();
+
         d = new ArrayList<TreeMap<Integer,List<Integer>>>();
         label = new ArrayList<String>();
         canonized = false;
@@ -918,21 +923,27 @@ public class Automaton {
         String op,
         boolean print,
         String prefix,
-        StringBuffer log) throws Exception{
-        if(this.TRUE_FALSE_AUTOMATON || M.TRUE_FALSE_AUTOMATON)
+        StringBuffer log) throws Exception {
+
+        if (this.TRUE_FALSE_AUTOMATON || M.TRUE_FALSE_AUTOMATON) {
             throw new Exception("Invalid use of the crossProduct method: " +
-                "the automata for this method cannot be true or false automata.");
-        if(this.label == null ||
+                    "the automata for this method cannot be true or false automata.");
+        }
+
+        if (this.label == null ||
             M.label == null ||
             this.label.size() != A.size() ||
-            M.label.size() != M.A.size())
+            M.label.size() != M.A.size()
+        ) {
             throw new Exception("Invalid use of the crossProduct method: " +
-                "the automata for this method must have labeled inputs.");
+                    "the automata for this method must have labeled inputs.");
+        }
+
         /**N is going to hold the cross product*/
         Automaton N = new Automaton();
 
         long timeBefore = System.currentTimeMillis();
-        if(print){
+        if (print) {
             String msg = prefix + "computing cross product:" + Q + " states - " + M.Q + " states";
             log.append(msg + UtilityMethods.newLine());
             System.out.println(msg);
@@ -943,12 +954,13 @@ public class Automaton {
          * and when sameLabelsInMAndThis[2] = -1, it means that input 2 of M is not an input of this
          */
         int[] sameInputsInMAndThis = new int[M.A.size()];
-        for(int i = 0 ; i < M.label.size();i++){
+        for (int i = 0 ; i < M.label.size(); i++) {
             sameInputsInMAndThis[i] = -1;
-            if(label.contains(M.label.get(i))){
+            if (label.contains(M.label.get(i))) {
                 int j = label.indexOf(M.label.get(i));
-                if(!UtilityMethods.areEqual(A.get(j),M.A.get(i))){
-                    throw new Exception("in computing cross product of two automaton, variables with the same label must have the same alphabet");
+                if (!UtilityMethods.areEqual(A.get(j), M.A.get(i))){
+                    throw new Exception("in computing cross product of two automaton, "
+                            + "variables with the same label must have the same alphabet");
                 }
                 /*if(M.NS.get(i) != NS.get(j)){
                     System.out.println(M.NS.get(i) + " "+ NS.get(j));
@@ -957,29 +969,33 @@ public class Automaton {
                 sameInputsInMAndThis[i] = j;
             }
         }
-        for(int i = 0 ; i < A.size();i++){
+        for (int i = 0; i < A.size(); i++) {
             N.A.add(A.get(i));
             N.label.add(label.get(i));
             N.NS.add(NS.get(i));
         }
-        for(int i = 0 ; i < M.A.size();i++){
-            if(sameInputsInMAndThis[i] == -1){
+        for (int i = 0; i < M.A.size(); i++) {
+            if (sameInputsInMAndThis[i] == -1) {
                 N.A.add(new ArrayList<Integer>(M.A.get(i)));
                 N.label.add(M.label.get(i));
                 N.NS.add(M.NS.get(i));
             }
-            else{
+            else {
                 int j = sameInputsInMAndThis[i];
-                if(M.NS.get(i) != null && N.NS.get(j) == null)
+                if(M.NS.get(i) != null && N.NS.get(j) == null) {
                     N.NS.set(j, M.NS.get(i));
+                }
+
             }
         }
         N.alphabetSize = 1;
-        for(List<Integer> i:N.A)
+        for(List<Integer> i : N.A) {
             N.alphabetSize *= i.size();
+        }
+
         List<Integer> allInputsOfN = new ArrayList<Integer>();
-        for(int i = 0 ; i < alphabetSize;i++){
-            for(int j = 0 ; j < M.alphabetSize;j++){
+        for (int i = 0; i < alphabetSize; i++) {
+            for (int j = 0; j < M.alphabetSize; j++) {
                 List<Integer> inputForN = joinTwoInputsForCrossProduct(decode(i),M.decode(j),sameInputsInMAndThis);
                 if(inputForN == null)
                     allInputsOfN.add(-1);
@@ -987,16 +1003,19 @@ public class Automaton {
                     allInputsOfN.add(N.encode(inputForN));
             }
         }
-        ArrayList<Integer> statesList = new ArrayList<Integer>();
-        Hashtable<Integer,Integer> statesHash = new Hashtable<Integer,Integer>();
+        ArrayList<List<Integer>> statesList = new ArrayList<List<Integer>>();
+        Hashtable<List<Integer>,Integer> statesHash = new Hashtable<List<Integer>, Integer>();
         N.q0 = 0;
-        statesList.add(q0*M.Q + M.q0);
-        statesHash.put(q0*M.Q + M.q0,0);
+        statesList.add(Arrays.asList(q0, M.q0));
+        statesHash.put(Arrays.asList(q0, M.q0), 0);
         int currentState = 0;
         while(currentState<statesList.size()){
-            int s = statesList.get(currentState);
-            int p = s/M.Q;
-            int q = s%M.Q;
+            List<Integer> s = statesList.get(currentState);
+
+            // s must be an array of length 2, where the first element is a state in this, and the second element is a
+            // state in the other Automaton.
+            int p = s.get(0);
+            int q = s.get(1);
             TreeMap<Integer,List<Integer>> thisStatesTransitions = new TreeMap<Integer,List<Integer>>();
             N.d.add(thisStatesTransitions);
             switch(op){
@@ -1060,9 +1079,9 @@ public class Automaton {
                     if(z != -1){
                         List<Integer> dest = new ArrayList<Integer>();
                         thisStatesTransitions.put(z, dest);
-                        for(int dest1:d.get(p).get(x)){
-                            for(int dest2:M.d.get(q).get(y)){
-                                int dest3 = dest1*M.Q+dest2;
+                        for(int dest1 : d.get(p).get(x)) {
+                            for(int dest2 : M.d.get(q).get(y)) {
+                                List<Integer> dest3 = Arrays.asList(dest1, dest2);
                                 if(!statesHash.containsKey(dest3)){
                                     statesList.add(dest3);
                                     statesHash.put(dest3, statesList.size()-1);
@@ -2664,7 +2683,7 @@ public class Automaton {
             }
         }
         int encoding = 0;
-        for(int i = 0 ; i < l.size();i++){
+        for(int i = 0 ; i < l.size(); i++){
             encoding += encoder.get(i) * A.get(i).indexOf(l.get(i));
         }
         return encoding;

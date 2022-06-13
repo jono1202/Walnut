@@ -25,7 +25,7 @@ import Automata.NumberSystem;
 /**
  * Examples of expression: a,a+b, a+b > 2,c=a+b, W[a]!=W[b], Ea W[a]!=W[a+1],...<br>
  * Some expressions evaluate to automaton. For example a+b>2 is an expression, and its value is an automaton with two
- * inputs which accepts only if the some of two inputs is greater than 2.<br>
+ * inputs which accepts only if the sum of two inputs is greater than 2.<br>
  * Here is the list of all different types of expressions:<br>
  * -alphabetLetter: an integer that follows @ in the predicate is an alphabetLetter expression. It evaluates to the integer
  * that follows @. For example W[a] = @-1 has the alphabetLetter expression @-1 which evaluates to -1. We store the value
@@ -55,7 +55,7 @@ import Automata.NumberSystem;
  * Note that Thue[a] != Thue[b] is an automaton expression and not a word expression.
  * @author Hamoon
  *
- */
+ */		
 public class Expression {
 	/**
 	 * The string that represent the expression

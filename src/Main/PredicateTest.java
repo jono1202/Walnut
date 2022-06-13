@@ -131,7 +131,9 @@ public class PredicateTest {
 			out.write(macro);
 			out.close();
 		}
-		catch (Exception o){		
+		catch (Exception o){
+			e.printStackTrace();
+			throw new Exception("Could not create macro: " + name);
 		}
 	}
 	private static void delete_macro(String name){

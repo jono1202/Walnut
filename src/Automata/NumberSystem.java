@@ -119,7 +119,7 @@ public class NumberSystem {
 		return addition.A.get(0);
 	}
 
-	public Automaton getAllRepresentations(){
+	public Automaton getAllRepresentations() {
 		return allRepresentations;
 	}
 
