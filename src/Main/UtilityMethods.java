@@ -32,6 +32,7 @@ public class UtilityMethods {
 	static String ADDRESS_FOR_AUTOMATA_LIBRARY = "Automata Library/";
 	static String ADDRESS_FOR_WORDS_LIBRARY = "Word Automata Library/";
 	static String ADDRESS_FOR_MORPHISM_LIBRARY = "Morphism Library/";
+	static String ADDRESS_FOR_TRANSDUCER_LIBRARY = "Transducer Library/";
 	static String ADDRESS_FOR_RESULT = "Result/";
 	static String ADDRESS_FOR_CUSTOM_BASES = "Custom Bases/";
 	static String ADDRESS_FOR_TEST_LIBRARY = "Test Library/";
@@ -71,6 +72,10 @@ public class UtilityMethods {
 
 	public static String get_address_for_morphism_library() {
 		return dir + ADDRESS_FOR_MORPHISM_LIBRARY;
+	}
+
+	public static String get_address_for_transducer_library() {
+		return dir + ADDRESS_FOR_TRANSDUCER_LIBRARY;
 	}
 
 	public static String get_address_for_test_library() {
@@ -242,57 +247,57 @@ public class UtilityMethods {
 		return Integer.parseInt(b.toString());
 	}
 
-//	/**
-//	 * Get GCD of two integers
-//	 * @param a - integer
-//	 * @param b - integer
-//	 * @return
-//	 */
-//	public static int gcd(int a, int b){
-//		if (a < b) {
-//			return gcd(b, a);
-//		}
-//		if (a % b == 0) {
-//			return b;
-//		}
-//		else return gcd(b, a % b);
-//	}
-//
-//	/**
-//	 * Get LCM of two integers.
-//	 * @param a - integer
-//	 * @param b - integer
-//	 * @return
-//	 */
-//	public static int lcm(int a, int b){
-//		return ( (a * b) / gcd(a, b));
-//	}
-//
-//	/**
-//	 * Taking a list of integers, a start and end index, return the LCM of the sublist formed by the start and end.
-//	 * @param lst - list of integers
-//	 * @param start - start index of the sublist
-//	 * @param end - end index of the sublist
-//	 * @return the LCM of the list of integers
-//	 */
-//	public static int lcmOfListWithStartAndEnd(List<Integer> lst, int start, int end) {
-//		if ((end - start) == 1) {
-//			return lcm(arr[start], arr[end - 1]);
-//		}
-//		else {
-//			return (lcm(arr[start], lcmOfListWithStartAndEnd(arr, start + 1, end)));
-//		}
-//
-//	}
-//
-//
-//	/**
-//	 * Taking a list of integers, return the LCM.
-//	 * @param lst - a list of integers
-//	 * @return the LCD of the list of integers.
-//	 */
-//	public static int lcmOfList(List<Integer> lst) {
-//		return lcmOfListWithStartAndEnd(lst, 0, lst.size());
-//	}
+	/**
+	 * Get GCD of two integers
+	 * @param a - integer
+	 * @param b - integer
+	 * @return
+	 */
+	public static int gcd(int a, int b){
+		if (a < b) {
+			return gcd(b, a);
+		}
+		if (a % b == 0) {
+			return b;
+		}
+		else return gcd(b, a % b);
+	}
+
+	/**
+	 * Get LCM of two integers.
+	 * @param a - integer
+	 * @param b - integer
+	 * @return
+	 */
+	public static int lcm(int a, int b){
+		return ( (a * b) / gcd(a, b));
+	}
+
+	/**
+	 * Taking a list of integers, a start and end index, return the LCM of the sublist formed by the start and end.
+	 * @param lst - list of integers
+	 * @param start - start index of the sublist
+	 * @param end - end index of the sublist
+	 * @return the LCM of the list of integers
+	 */
+	public static int lcmOfListWithStartAndEnd(List<Integer> lst, int start, int end) {
+		if ((end - start) == 1) {
+			return lcm(lst.get(start), lst.get(end - 1));
+		}
+		else {
+			return (lcm(lst.get(start), lcmOfListWithStartAndEnd(lst, start + 1, end)));
+		}
+
+	}
+
+
+	/**
+	 * Taking a list of integers, return the LCM.
+	 * @param lst - a list of integers
+	 * @return the LCD of the list of integers.
+	 */
+	public static int lcmOfList(List<Integer> lst) {
+		return lcmOfListWithStartAndEnd(lst, 0, lst.size());
+	}
 
 }

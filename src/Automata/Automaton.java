@@ -2701,7 +2701,7 @@ public class Automaton {
      * Here is an example: suppose that A = [[1,2],[0,-1],[3,4,5]] and L = [1,*,4]. Then the method would return
      * [[1,0,4],[1,-1,4]]. In other words, it'll replace * in the second position with 0 and -1.
      * */
-    private List<List<Integer>> expandWildcard(List<Integer> L){
+    protected List<List<Integer>> expandWildcard(List<Integer> L){
         List<List<Integer>> R = new ArrayList<List<Integer>>();
         R.add(new ArrayList<Integer>(L));
         for(int i = 0 ; i < L.size();i++){

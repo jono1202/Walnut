@@ -35,6 +35,9 @@ public class ParseMethods {
 	static int STATE_DECLARATION_OUTPUT = 2;
 	static int TRANSITION_INPUT = 1;
 	static int TRANSITION_DESTINATION = 6;
+	static int TRANSDUCER_TRANSITION_INPUT = 1;
+	static int TRANSDUCER_TRANSITION_DESTINATION = 6;
+	static int TRANSDUCER_TRANSITION_OUTPUT = 8; // character output by the transition, not the state.
 
 	static String REGEXP_FOR_TRUE_FALSE = "^\\s*(true|false)\\s*$";
 	static Pattern PATTERN_FOR_TRUE_FALSE = Pattern.compile(REGEXP_FOR_TRUE_FALSE);
@@ -57,6 +60,9 @@ public class ParseMethods {
 	static Pattern PATTERN_FOR_MAPPING_IN_morphism_COMMAND = Pattern.compile(REGEXP_FOR_MAPPING_IN_morphism_COMMAND);
 	static String REGEXP_FOR_MAPPING_IMAGE_IN_morphism_COMMAND = "\\[(\\+|\\-)?\\s*\\d+\\]|\\d";
 	static Pattern PATTERN_FOR_MAPPING_IMAGE_IN_morphism_COMMAND = Pattern.compile(REGEXP_FOR_MAPPING_IMAGE_IN_morphism_COMMAND);
+
+	static String REGEXP_FOR_TRANSDUCER_TRANSITION = "^\\s*((((\\+|\\-)?\\s*\\d+\\s*)|(\\s*\\*\\s*))+)\\s*\\->\\s*((\\d+\\s*)+)\\s*\\/\\s*((\\+|\\-)?\\s*\\d+)\\s*$";
+	static Pattern PATTERN_FOR_TRANSDUCER_TRANSITION = Pattern.compile(REGEXP_FOR_TRANSDUCER_TRANSITION);
 
 	public static boolean parseTrueFalse(String s,boolean[] singleton){
 		Matcher m = PATTERN_FOR_TRUE_FALSE.matcher(s);
@@ -148,11 +154,27 @@ public class ParseMethods {
 		return false;
 	}
 
+	public static boolean parseTransducerTransition(
+			String s,
+			List<Integer> input,
+			List<Integer> dest,
+			List<Integer> output
+	) {
+		Matcher m = PATTERN_FOR_TRANSDUCER_TRANSITION.matcher(s);
+		if (m.find()) {
+			parseList(m.group(TRANSDUCER_TRANSITION_INPUT), input);
+			parseList(m.group(TRANSDUCER_TRANSITION_DESTINATION), dest);
+			parseList(m.group(TRANSDUCER_TRANSITION_OUTPUT), output);
+			return true;
+		}
+		return false;
+	}
+
 	public static void parseList(String s, List<Integer> list) {
 		int index = 0;
 		Matcher m = PATTERN_ELEMENT.matcher(s);
-		while(m.find(index)){
-			if(m.group(1).equals("*"))list.add(null);
+		while (m.find(index)) {
+			if (m.group(1).equals("*")) list.add(null);
 			else list.add(UtilityMethods.parseInt(m.group(1)));
 			index = m.end();
 		}

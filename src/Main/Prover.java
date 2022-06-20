@@ -36,6 +36,7 @@ import Automata.Automaton;
 import Automata.Morphism;
 import Automata.NumberSystem;
 import Automata.OstrowskiNumeration;
+import Automata.Transducer;
 
 /**
  * This class contains the main method. It is responsible to get a command from user
@@ -43,7 +44,7 @@ import Automata.OstrowskiNumeration;
  * @author Hamoon
  */
 public class Prover {
-	static String REGEXP_FOR_THE_LIST_OF_COMMANDS = "(eval|def|macro|reg|load|ost|exit|quit|cls|clear|combine|morphism|promote|image|inf|split|rsplit|join|test)";
+	static String REGEXP_FOR_THE_LIST_OF_COMMANDS = "(eval|def|macro|reg|load|ost|exit|quit|cls|clear|combine|morphism|promote|image|inf|split|rsplit|join|test|transduce)";
 	static String REGEXP_FOR_EMPTY_COMMAND = "^\\s*(;|::|:)\\s*$";
 	/**
 	 * the high-level scheme of a command is a name followed by some arguments and ending in either ; : or ::
@@ -145,6 +146,10 @@ public class Prover {
 	static Pattern PATTERN_FOR_test_COMMAND = Pattern.compile(REGEXP_FOR_test_COMMAND);
 	static int GROUP_TEST_NAME = 1, GROUP_TEST_NUM = 2;
 
+	static String REGEXP_FOR_transduce_COMMAND = "^\\s*transduce\\s+([a-zA-Z]\\w*)\\s+([a-zA-Z]\\w*)\\s+([a-zA-Z]\\w*)\\s*(;|::|:)\\s*$";
+	static Pattern PATTERN_FOR_transduce_COMMAND = Pattern.compile(REGEXP_FOR_transduce_COMMAND);
+	static int GROUP_TRANSDUCE_NEW_NAME = 1, GROUP_TRANSDUCE_TRANSDUCER = 2, GROUP_TRANSDUCE_OLD_NAME = 3;
+
 	/**
 	 * if the command line argument is not empty, we treat args[0] as a filename.
 	 * if this is the case, we read from the file and load its commands before we submit control to user.
@@ -168,7 +173,7 @@ public class Prover {
 		// can also run these.
 //		IT.runPerformanceTest("Walnut with Valmari without refactoring", 5);
 //		IT.runPerformanceTest("Walnut with dk.bricks", 5);
-		
+
 		run(args);
 	}
 
@@ -323,6 +328,8 @@ public class Prover {
 			joinCommand(s);
 		} else if (commandName.equals("test")) {
 			testCommand(s);
+		} else if (commandName.equals("transduce")) {
+			transduceCommand(s);
 		} else {
 			throw new Exception("Invalid command " + commandName + ".");
 		}
@@ -365,6 +372,8 @@ public class Prover {
 			return rsplitCommand(s);
 		} else if (commandName.equals("join")) {
 			return joinCommand(s);
+		} else if (commandName.equals("transduce")) {
+			return transduceCommand(s);
 		} else {
 			throw new Exception("Invalid command: " + commandName);
 		}
@@ -886,6 +895,25 @@ public class Prover {
 			m.group(GROUP_OST_PERIOD));
 		ostr.createRepresentationAutomaton();
 		ostr.createAdderAutomaton();
+	}
+
+	public static TestCase transduceCommand(String s) throws Exception {
+		Matcher m = PATTERN_FOR_transduce_COMMAND.matcher(s);
+		if(!m.find()) {
+			throw new Exception("Invalid use of transduce command.");
+		}
+		Transducer T = new Transducer(UtilityMethods.get_address_for_transducer_library()+m.group(GROUP_TRANSDUCE_TRANSDUCER)+".txt");
+		System.out.println("added T");
+		Automaton M =  new Automaton(UtilityMethods.get_address_for_words_library()+m.group(GROUP_TRANSDUCE_OLD_NAME)+".txt");
+		System.out.println("added M");
+
+		Automaton C = T.transduce(M);
+		System.out.println("made C");
+		C.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_TRANSDUCE_NEW_NAME)+".gv", s, true);
+		C.write(UtilityMethods.get_address_for_result()+m.group(GROUP_TRANSDUCE_NEW_NAME)+".txt");
+		C.write(UtilityMethods.get_address_for_words_library()+m.group(GROUP_TRANSDUCE_NEW_NAME)+".txt");
+
+		return new TestCase(s,C,"","","");
 	}
 
 	public static void clearScreen() {
