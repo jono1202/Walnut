@@ -299,5 +299,4 @@ public class UtilityMethods {
 	public static int lcmOfList(List<Integer> lst) {
 		return lcmOfListWithStartAndEnd(lst, 0, lst.size());
 	}
-
 }

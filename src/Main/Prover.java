@@ -167,7 +167,7 @@ public class Prover {
 //		IT.createTestCases();
 
 		// to run test cases, run the following lines:
-		// IntegrationTest IT = new IntegrationTest(true);
+//		IntegrationTest IT = new IntegrationTest(true);
 //		IT.runTestCases();
 
 		// can also run these.

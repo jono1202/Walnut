@@ -2791,7 +2791,7 @@ public class Automaton {
     private void subsetConstruction(HashSet<Integer> initial_state,boolean print, String prefix, StringBuffer log)throws Exception{
         long timeBefore = System.currentTimeMillis();
         if(print){
-            String msg = prefix + "determinizing:" + Q + " states";
+            String msg = prefix + "Determinizing: " + Q + " states";
             log.append(msg + UtilityMethods.newLine());
             System.out.println(msg);
         }
@@ -2805,6 +2805,20 @@ public class Automaton {
         List<TreeMap<Integer,List<Integer>>> new_d = new ArrayList<TreeMap<Integer,List<Integer>>>();
 
         while(current_state < number_of_states){
+
+            if (print) {
+                int statesSoFar = current_state + 1;
+                long timeAfter = System.currentTimeMillis();
+                if (statesSoFar == 1e2 || statesSoFar == 1e3
+                        || (statesSoFar % 1e4 == 0 && statesSoFar > 0)) {
+                    String msg = prefix + "  Progress: Added " + statesSoFar + " states - "
+                            + (number_of_states-statesSoFar) + " states left in queue - "
+                            + number_of_states + " reachable states - " + (timeAfter-timeBefore)+"ms";
+                    log.append(msg + UtilityMethods.newLine());
+                    System.out.println(msg);
+                }
+            }
+
             HashSet<Integer> state = statesList.get(current_state);
             new_d.add(new TreeMap<Integer,List<Integer>>());
             HashSet<Integer> dest;
@@ -2854,7 +2868,7 @@ public class Automaton {
         O = newO;
         long timeAfter = System.currentTimeMillis();
         if(print){
-            String msg = prefix + "determinized:" + Q + " states - "+(timeAfter-timeBefore)+"ms";
+            String msg = prefix + "Determinized: " + Q + " states - "+(timeAfter-timeBefore)+"ms";
             log.append(msg + UtilityMethods.newLine());
             System.out.println(msg);
         }
