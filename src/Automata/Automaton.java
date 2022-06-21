@@ -2809,9 +2809,8 @@ public class Automaton {
             if (print) {
                 int statesSoFar = current_state + 1;
                 long timeAfter = System.currentTimeMillis();
-                if (statesSoFar == 1e2 || statesSoFar == 1e3 || statesSoFar == 1e4
-                        || statesSoFar == 1e5 || statesSoFar == 1e6
-                        || (statesSoFar % 1e6 == 0 && statesSoFar > 0)) {
+                if (statesSoFar == 1e2 || statesSoFar == 1e3
+                        || (statesSoFar % 1e4 == 0 && statesSoFar > 0)) {
                     String msg = prefix + "  Progress: Added " + statesSoFar + " states - "
                             + (number_of_states-statesSoFar) + " states left in queue - "
                             + number_of_states + " reachable states - " + (timeAfter-timeBefore)+"ms";
