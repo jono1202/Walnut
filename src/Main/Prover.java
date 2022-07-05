@@ -146,9 +146,10 @@ public class Prover {
 	static Pattern PATTERN_FOR_test_COMMAND = Pattern.compile(REGEXP_FOR_test_COMMAND);
 	static int GROUP_TEST_NAME = 1, GROUP_TEST_NUM = 2;
 
-	static String REGEXP_FOR_transduce_COMMAND = "^\\s*transduce\\s+([a-zA-Z]\\w*)\\s+([a-zA-Z]\\w*)\\s+([a-zA-Z]\\w*)\\s*(;|::|:)\\s*$";
+	static String REGEXP_FOR_transduce_COMMAND = "^\\s*transduce\\s+([a-zA-Z]\\w*)\\s+([a-zA-Z]\\w*)\\s+(\\$|\\s*)([a-zA-Z]\\w*)\\s*(;|::|:)\\s*$";
 	static Pattern PATTERN_FOR_transduce_COMMAND = Pattern.compile(REGEXP_FOR_transduce_COMMAND);
-	static int GROUP_TRANSDUCE_NEW_NAME = 1, GROUP_TRANSDUCE_TRANSDUCER = 2, GROUP_TRANSDUCE_OLD_NAME = 3;
+	static int GROUP_TRANSDUCE_NEW_NAME = 1, GROUP_TRANSDUCE_TRANSDUCER = 2,
+			GROUP_TRANSDUCE_DOLLAR_SIGN = 3, GROUP_TRANSDUCE_OLD_NAME = 4, GROUP_TRANSDUCE_END = 5;
 
 	/**
 	 * if the command line argument is not empty, we treat args[0] as a filename.
@@ -420,7 +421,7 @@ public class Prover {
 		}
 
 		List<String> free_variables = new ArrayList<String>();
-		if(m.group(ED_FREE_VARIABLES)!= null) {
+		if(m.group(ED_FREE_VARIABLES) != null) {
 			which_matrices_to_compute(m.group(ED_FREE_VARIABLES), free_variables);
 		}
 
@@ -789,6 +790,7 @@ public class Prover {
 		if(!m.find()) {
 			throw new Exception("Invalid use of reverse split command.");
 		}
+
 		boolean printSteps = m.group(GROUP_JOIN_END).equals(":");
 		boolean printDetails = m.group(GROUP_JOIN_END).equals("::");
 		String prefix = new String();
@@ -898,22 +900,37 @@ public class Prover {
 	}
 
 	public static TestCase transduceCommand(String s) throws Exception {
-		Matcher m = PATTERN_FOR_transduce_COMMAND.matcher(s);
-		if(!m.find()) {
-			throw new Exception("Invalid use of transduce command.");
+		try {
+
+			Matcher m = PATTERN_FOR_transduce_COMMAND.matcher(s);
+			if(!m.find()) {
+				throw new Exception("Invalid use of transduce command.");
+			}
+
+			boolean printSteps = m.group(GROUP_TRANSDUCE_END).equals(":");
+			boolean printDetails = m.group(GROUP_TRANSDUCE_END).equals("::");
+			String prefix = new String();
+			StringBuffer log = new StringBuffer();
+
+			Transducer T = new Transducer(UtilityMethods.get_address_for_transducer_library()+m.group(GROUP_TRANSDUCE_TRANSDUCER)+".txt");
+			String library = UtilityMethods.get_address_for_words_library();
+			if (m.group(GROUP_TRANSDUCE_DOLLAR_SIGN).equals("$")) {
+				library = UtilityMethods.get_address_for_automata_library();
+			}
+			Automaton M =  new Automaton(library + m.group(GROUP_TRANSDUCE_OLD_NAME)+".txt");
+
+			Automaton C = T.transduce(M, printSteps, prefix, log);
+			C.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_TRANSDUCE_NEW_NAME)+".gv", s, true);
+			C.write(UtilityMethods.get_address_for_result()+m.group(GROUP_TRANSDUCE_NEW_NAME)+".txt");
+			C.write(UtilityMethods.get_address_for_automata_library()+m.group(GROUP_TRANSDUCE_NEW_NAME)+".txt");
+			return new TestCase(s,C,"","","");
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new Exception("Error transducing automaton.");
 		}
-		Transducer T = new Transducer(UtilityMethods.get_address_for_transducer_library()+m.group(GROUP_TRANSDUCE_TRANSDUCER)+".txt");
-		System.out.println("added T");
-		Automaton M =  new Automaton(UtilityMethods.get_address_for_words_library()+m.group(GROUP_TRANSDUCE_OLD_NAME)+".txt");
-		System.out.println("added M");
 
-		Automaton C = T.transduce(M);
-		System.out.println("made C");
-		C.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_TRANSDUCE_NEW_NAME)+".gv", s, true);
-		C.write(UtilityMethods.get_address_for_result()+m.group(GROUP_TRANSDUCE_NEW_NAME)+".txt");
-		C.write(UtilityMethods.get_address_for_words_library()+m.group(GROUP_TRANSDUCE_NEW_NAME)+".txt");
 
-		return new TestCase(s,C,"","","");
+
 	}
 
 	public static void clearScreen() {

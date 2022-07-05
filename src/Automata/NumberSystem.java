@@ -111,6 +111,24 @@ public class NumberSystem {
 		return is_msd;
 	}
 
+	// flips the number system from msd to lsd, and vice versa.
+	public void reverseMsd() throws Exception {
+		int indexOfUnderscore = name.indexOf("_");
+		String msd_or_lsd = name.substring(0, indexOfUnderscore);
+		String suffix = name.substring(indexOfUnderscore);
+		String newName;
+		if (msd_or_lsd.equals("msd")) {
+			newName = "lsd" + suffix;
+		}
+		else {
+			newName = "msd" + suffix;
+		}
+	}
+
+	public String getName() {
+		return name;
+	}
+
 	public boolean should_we_use_allRepresentations() {
 		return flag_should_we_use_allRepresentations;
 	}
@@ -136,24 +154,24 @@ public class NumberSystem {
 		 */
 		String complementName = (is_msd ? "lsd":"msd")+"_" + base;
 		String addressForTheSetOfAllRepresentations =
-            UtilityMethods.get_address_for_custom_bases() + name + ".txt";
+				UtilityMethods.get_address_for_custom_bases() + name + ".txt";
 		String complement_addressForTheSetOfAllRepresentations =
-            UtilityMethods.get_address_for_custom_bases() + complementName + ".txt";
+				UtilityMethods.get_address_for_custom_bases() + complementName + ".txt";
 		String addressForAddition = UtilityMethods.
-			get_address_for_custom_bases() + name + "_addition.txt";
+				get_address_for_custom_bases() + name + "_addition.txt";
 		String complement_addressForAddition = UtilityMethods.
-			get_address_for_custom_bases() + complementName + "_addition.txt";
+				get_address_for_custom_bases() + complementName + "_addition.txt";
 		String addressForLessThan = UtilityMethods.
-			get_address_for_custom_bases() + name + "_less_than.txt";
+				get_address_for_custom_bases() + name + "_less_than.txt";
 		String complement_addressForLessThan = UtilityMethods.
-			get_address_for_custom_bases() + complementName + "_less_than.txt";
+				get_address_for_custom_bases() + complementName + "_less_than.txt";
 
 		//addition
 		if(new File(addressForAddition).isFile()) {
 			addition = new Automaton(addressForAddition);
 		} else if(new File(complement_addressForAddition).isFile()) {
 			addition = new Automaton(complement_addressForAddition);
-			addition.reverse(false,null,null);
+			addition.reverse(false, null, null, false);
 		} else {
 			if(UtilityMethods.isNumber(base) && Integer.parseInt(base) > 1) {
 				base_n_addition(Integer.parseInt(base));
@@ -171,24 +189,24 @@ public class NumberSystem {
 		 */
 		if(addition.A == null || addition.A.size() != 3) {
 			throw new Exception(
-				"The addition automaton must have exactly 3 inputs: base " + name);
+					"The addition automaton must have exactly 3 inputs: base " + name);
 		}
 
 		if(!addition.A.get(0).contains(0)) {
 			throw new Exception(
-				"The input alphabet of addition automaton must contain 0: base " + name);
+					"The input alphabet of addition automaton must contain 0: base " + name);
 		}
 
 		if(!addition.A.get(0).contains(1)) {
 			throw new Exception(
-				"The input alphabet of addition automaton must contain 1: base " + name);
+					"The input alphabet of addition automaton must contain 1: base " + name);
 		}
 
 		for(int i = 1; i < addition.A.size(); i++) {
 			if(!UtilityMethods.areEqual(addition.A.get(i), addition.A.get(0))) {
 				throw new Exception(
-					"All 3 inputs of the addition automaton " +
-					"must have the same alphabet: base " + name);
+						"All 3 inputs of the addition automaton " +
+								"must have the same alphabet: base " + name);
 			}
 		}
 
@@ -201,7 +219,7 @@ public class NumberSystem {
 			lessThan = new Automaton(addressForLessThan);
 		} else if(new File(complement_addressForLessThan).isFile()) {
 			lessThan = new Automaton(complement_addressForLessThan);
-			lessThan.reverse(false,null,null);
+			lessThan.reverse(false,null,null,false);
 		} else if(UtilityMethods.parseNegNumber(base) > 1) {
 			base_neg_n_less_than(UtilityMethods.parseNegNumber(base));
 		} else {
@@ -215,14 +233,14 @@ public class NumberSystem {
 		 */
 		if(lessThan.A == null || lessThan.A.size() != 2) {
 			throw new Exception(
-				"The less_than automaton must have exactly 2 inputs: base " + name);
+					"The less_than automaton must have exactly 2 inputs: base " + name);
 		}
 
 		for(int i =0; i < lessThan.A.size();i++) {
 			if(!UtilityMethods.areEqual(lessThan.A.get(i),addition.A.get(0))) {
 				throw new Exception(
-					"Inputs of the less_than automaton must have the same alphabet " +
-					"as the alphabet of inputs of addition automaton: base " + name);
+						"Inputs of the less_than automaton must have the same alphabet " +
+								"as the alphabet of inputs of addition automaton: base " + name);
 			}
 
 			lessThan.NS.set(i, this);
@@ -240,7 +258,7 @@ public class NumberSystem {
 			allRepresentations = new Automaton(addressForTheSetOfAllRepresentations);
 		} else if(new File(complement_addressForTheSetOfAllRepresentations).isFile()) {
 			allRepresentations = new Automaton(complement_addressForTheSetOfAllRepresentations);
-			allRepresentations.reverse(false,null,null);
+			allRepresentations.reverse(false,null,null, false);
 		} else {
 			flag_should_we_use_allRepresentations = false;
 		}
@@ -315,7 +333,9 @@ public class NumberSystem {
 				lessThan.d.get(1).put(i*alphabet.size()+j, dest);
 			}
 		}
-		if(!is_msd)lessThan.reverse(false,null,null);
+		if(!is_msd) {
+			lessThan.reverse(false,null,null,false);
+		}
 	}
 
 	private void applyAllRepresentations() throws Exception{
@@ -376,7 +396,7 @@ public class NumberSystem {
 		}
 
 		if(!is_msd) {
-			addition.reverse(false,null,null);
+			addition.reverse(false,null,null,false);
         }
 	}
 
@@ -448,7 +468,7 @@ public class NumberSystem {
 		}
 
 		if(!is_msd) {
-			addition.reverse(false,null,null);
+			addition.reverse(false,null,null,false);
 		}
 	}
 
@@ -502,7 +522,7 @@ public class NumberSystem {
 		}
 
 		if(!is_msd) {
-			lessThan.reverse(false,null,null);
+			lessThan.reverse(false,null,null,false);
 		}
 	}
 
@@ -575,7 +595,7 @@ public class NumberSystem {
 		}
 
 		if(is_msd) {
-			compare.reverse(false,null,null);
+			compare.reverse(false,null,null,false);
 		}
 		return compare;
 	}

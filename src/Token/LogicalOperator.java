@@ -86,7 +86,7 @@ public class LogicalOperator extends Operator{
 				System.out.println(preStep);
 			}
 			if(op.equals("`"))
-				a.M.reverse(print,prefix+" ",log);
+				a.M.reverse(print, prefix+" ", log, true);
 			if(op.equals("~"))
 				a.M.not(print,prefix+" ",log);
 			S.push(new Expression(op + a,a.M));

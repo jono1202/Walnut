@@ -261,414 +261,383 @@ public class Transducer extends Automaton {
     /**
      * Transduce an Automaton M as in Dekking (1994).
      *
-     * Right now, assumed that the initial state of the new automaton is q0 = 0.
-     * @param M -
+     * @param M - automaton to transduce
+     * @param print - whether to print details
+     * @param prefix - prefix for printing details
+     * @param log - log to write the details to
      * @return The transduced Automaton after applying this Transducer to M.
      * @throws Exception
      */
-    public Automaton transduce(Automaton M) throws Exception {
-        /**
-         * N will be the returned Automaton, just have to build it up.
-         */
-        Automaton N = new Automaton();
+    public Automaton transduce(Automaton M, boolean print, String prefix, StringBuffer log) throws Exception {
 
-        // build up the automaton.
-        for (int i = 0; i < M.A.size(); i++) {
-            N.A.add(M.A.get(i));
-            N.NS.add(M.NS.get(i));
+        try {
 
-            // Copy the encoder
-            if (M.encoder != null && M.encoder.size() > 0) {
-                if (N.encoder == null) {
-                    N.encoder = new ArrayList<Integer>();
+            long timeBefore = System.currentTimeMillis();
+            if(print){
+                String msg = prefix + "transducing: " + M.Q + " state automaton - " + Q + " state transducer";
+                log.append(msg + UtilityMethods.newLine());
+                System.out.println(msg);
+            }
+
+            /**
+             * N will be the returned Automaton, just have to build it up.
+             */
+            Automaton N = new Automaton();
+
+            // build up the automaton.
+            for (int i = 0; i < M.A.size(); i++) {
+                N.A.add(M.A.get(i));
+                N.NS.add(M.NS.get(i));
+
+                // Copy the encoder
+                if (M.encoder != null && M.encoder.size() > 0) {
+                    if (N.encoder == null) {
+                        N.encoder = new ArrayList<Integer>();
+                    }
+                    N.encoder.add(M.encoder.get(i));
                 }
-                N.encoder.add(M.encoder.get(i));
+
+                // Copy the label
+                if (M.label != null && M.label.size() == M.A.size()) {
+                    N.label.add(M.label.get(i));
+                }
             }
 
-            // Copy the label
-            if (M.label != null && M.label.size() == M.A.size()) {
-                N.label.add(M.label.get(i));
+            // TODO: This probably should be configurable, and should not necessarily be 0.
+            N.q0 = 0;
+
+            /*
+                Need to find P and Q so the transition function of the Transducer becomes ultimately periodic with lag Q
+                and period P.
+             */
+
+            int p, q;
+
+            // We will have
+            List<List<Map<Integer, Integer>>> iterateMaps = new ArrayList<List<Map<Integer, Integer>>>();
+
+            // iterateStrings[i] will be a map from a state q of M to h^i(q).
+            List<List<List<Integer>>> iterateStrings = new ArrayList<List<List<Integer>>>();
+
+            // initMaps.get(i) will be the map phi_{M.O(i)}
+            List<Map<Integer, Integer>> initMaps = new ArrayList<Map<Integer, Integer>>();
+
+            // initStrings.get(j) = [j];
+            List<List<Integer>> initStrings = new ArrayList<List<Integer>>();
+
+            // start with the empty string.
+            HashMap<Integer, Integer> identity = new HashMap<Integer, Integer>();
+
+            // identity will be the identity, so we want to iterate through the states of the transducer.
+            for (int i = 0; i < Q; i++) {
+                identity.put(i, i);
             }
-        }
 
-        // TODO: This probably should be configurable, and should not necessarily be 0.
-        N.q0 = 0;
+            // will add M.Q maps to initMaps.
+            for (int i = 0; i < M.Q; i++) {
 
-        /*
-            Need to find P and Q so the transition function of the Transducer becomes ultimately periodic with lag Q
-            and period P.
-         */
+                HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
 
-        // periods of the sequence (phi_s, phi_{h(s)}, phi_{h^2(s)}, ...) for each state s where h is the underlying
-        // morphism of h
-        ArrayList<Integer> pPerState = new ArrayList<Integer>();
-        ArrayList<Integer> qPerState = new ArrayList<Integer>();
+                for (int j = 0; j < Q; j++) {
+                    map.put(j, d.get(j).get(M.O.get(i)).get(0));
+                }
 
-        for (int z = 0; z < M.Q; z++) {
-            // this will contain (z, h(z), h^2(z), ..., h^m(z)) for some m.
-            ArrayList<List<Integer>> hIterates = new ArrayList<List<Integer>>();
+                initMaps.add(map);
 
-            // hIterates[0] should just be [z] alone.
-            hIterates.add(Arrays.asList(z));
+                initStrings.add(Arrays.asList(i));
+            }
 
+            iterateMaps.add(initMaps);
 
-            // >= 0 if m is p+q-1, if this is -1 then no m has been found yet.
-            // Set to -1 by default but will be whatever m is once an m is found.
+            iterateStrings.add(initStrings);
+
             int mFound = -1, nFound = -1;
 
-            // m will be the upper index. Note that m can be as large as needed.
             for (int m = 1; ; m++) {
-                // hIterates should always have an element at index m-1, as a new one is added just before the loop
-                // and a new one is added in each iteration of this loop.
 
-                // this will be h^m(z)
-                ArrayList<Integer> mthPower = new ArrayList<Integer>();
+                List<Map<Integer, Integer>> prevMaps = iterateMaps.get(iterateMaps.size() - 1);
 
-                // for every "character" in h^{m-1}(z), add new
-                for (int x : hIterates.get(m - 1)) {
+                List<List<Integer>> prevStrings = iterateStrings.get(iterateStrings.size() - 1);
 
-                    // for every digit in the alphabet of M
-                    for (int l : M.d.get(x).keySet()) {
+                List<Map<Integer, Integer>> newMaps = new ArrayList<Map<Integer, Integer>>();
 
-                        // each list of states that this transition goes to.
-                        // we assuming it's a DFA for now, so this has length 1 we're assuming...
+                List<List<Integer>> newStrings = new ArrayList<List<Integer>>();
 
-                        // get the first index of M.d on state x and edge label l
-                        mthPower.add(M.d.get(x).get(l).get(0));
+                for (int i = 0; i < M.Q; i++) {
 
+                    // will be h^m(i)
+                    List<Integer> iString = new ArrayList<Integer>();
+
+                    for (int u = 0; u < prevStrings.get(i).size(); u++) {
+
+                        // for every digit in the alphabet of M
+                        for (int l : M.d.get(prevStrings.get(i).get(u)).keySet()) {
+
+                            // each list of states that this transition goes to.
+                            // we assuming it's a DFA for now, so this has length 1 we're assuming...
+
+                            // get the first index of M.d on state x and edge label l
+
+                            iString.add(M.d.get(prevStrings.get(i).get(u)).get(l).get(0));
+                        }
                     }
+
+                    newStrings.add(iString);
+
+                    // start off with the identity.
+                    HashMap<Integer, Integer> mapSoFar = new HashMap<>(identity);
+
+                    for (int u = 0; u < iString.size(); u++) {
+                        HashMap<Integer, Integer> newMap = new HashMap<Integer, Integer>();
+                        for (int l = 0; l < Q; l++) {
+                            newMap.put(l, d.get(mapSoFar.get(l)).get(M.O.get(iString.get(u))).get(0));
+                        }
+                        mapSoFar = newMap;
+                    }
+
+                    newMaps.add(mapSoFar);
+
+
                 }
 
-                // add h^m(z)
-                hIterates.add(mthPower);
+                iterateMaps.add(newMaps);
 
-                // now need to compare phi_{h^m(z)} with phi_{h^n(z)},
-                // where phi is the transition function of the transducer.
+                iterateStrings.add(newStrings);
+
                 for (int n = 0; n < m; n++) {
 
-                    // >= 0 if n is q, if this is -1 then no n has been found yet where phi_{h^m(z)} = phi_{h^n(z)}.
-                    // Set to -1 by default but will be whatever n is once an n is found.
-                    nFound = n;
-
-                    // iterate through the states of the transducer.
-                    // need phi_{h^m(z)} and phi_{h^n(z)} to match on all states s of the transducer
-                    for (int s = 0; s < Q; s++) {
-
-                        /**
-                         * We know that h^m(z) = [x0, ..., x{k-1}] for some k, so
-                         *  phi_{h^m(z)} = phi_{x_k} o phi_{x_{k-1}} o ... o phi_{x_1}, where o denotes composition.
-                         */
-
-                        int mState = s;
-
-                        for (int i = 0; i < hIterates.get(m).size(); i++) {
-                            /**
-                             * This will be an incremental value,
-                             * phi_{x_{i}} o phi_{x_{i-1}} o ... o phi_{x_0}(s)
-                             * = phi_{x_{i}} (phi_{x_{i-1}} o ... o phi_{x_0}(s))
-                             */
-                            mState = d.get(mState).get(hIterates.get(m).get(i)).get(0);
-                        }
-
-                        // similarly for n.
-
-                        int nState = s;
-
-                        for (int i = 0; i < hIterates.get(n).size(); i++) {
-                            nState = d.get(nState).get(hIterates.get(n).get(i)).get(0);
-                        }
-
-                        // if the n state is not equal to the m state, break.
-                        if (mState != nState) {
-                            nFound = -1;
-
+                    boolean same = true;
+                    for (int i = 0; i < M.Q; i++) {
+                        if (!iterateMaps.get(n).get(i).equals(iterateMaps.get(m).get(i))) {
+                            same = false;
                             break;
                         }
                     }
-                    if (nFound >= 0) {
+                    if (same) {
+                        nFound = n;
                         mFound = m;
                         break;
                     }
                 }
 
-                if (mFound >= 0) {
+                if (mFound != -1) {
                     break;
                 }
+
             }
 
-            // now a period p and lag q have been found for this initial state, namely we have
-            // this p being m-n and q being n. so
-            pPerState.add(mFound - nFound);
-            qPerState.add(nFound);
-        }
-
-        // now need p and q.
-
-        // make q by getting the max.
-        int q = 0;
-        for (int i = 0; i < qPerState.size(); i++) {
-            if (q < qPerState.get(i)) {
-                q = qPerState.get(i);
-            }
-        }
-        // q should be max{qPerState[0], ..., qPerState[qPerState.length - 1]}
-
-        // make p by getting the LCM of all of the values of p for each individual sequence.
-        int p = UtilityMethods.lcmOfList(pPerState);
+            p = mFound - nFound;
+            q = nFound;
 
         /*
             Make the states of the automaton.
          */
 
-        // hashmap of Map to String (to keep track of all maps)
-        HashMap<Map<Integer, Integer>, List<Integer>> mapsToString = new HashMap<Map<Integer, Integer>,List<Integer>>();
+            // now to generate the actual states.
 
-        // start with the empty string.
-        HashMap<Integer, Integer> identity = new HashMap<Integer, Integer>();
+            N.q0 = 0;
 
-        class MapStringTuple {
-            final Map<Integer, Integer> map;
-            final List<Integer> string;
-            MapStringTuple(Map<Integer, Integer> map, List<Integer> string) {
-                this.map = map;
-                this.string = string;
-            }
-        }
-
-        // queue of maps TUPLES because you also need the string associated with it.
-        Queue<MapStringTuple> queue = new LinkedList<>();
-
-        // identity will be the identity, so we want to iterate through the states of the transducer.
-        for (int i = 0; i < Q; i++) {
-            identity.put(i, i);
-        }
-
-        // put the identity.
-        mapsToString.put(identity, Arrays.asList());
-
-        // add (id, []) to queue
-        queue.add(new MapStringTuple(identity, Arrays.asList()));
-
-        while (queue.size() > 0) {
-
-            MapStringTuple tuple = queue.remove();
-
-            // iterate through the states of the automaton to be transduced
-            for (int i = 0; i < M.Q; i++) {
-                HashMap<Integer, Integer> newMap = new HashMap<Integer, Integer>();
-
-                for (int j = 0; j < Q; j++) {
-                    // construct phi_{O(w x_i)}, where oldMap = phi_{O(w)}
-                    newMap.put(j, d.get(tuple.map.get(j)).get(M.O.get(i)).get(0));
+            // tuple of the form (a, iters) where iters is a list of p+q maps phi_{M.O(w)}, ..., phi_{h^{p+q-1}(M.O(W))}
+            class StateTuple {
+                final int state;
+                final List<Integer> string;
+                final List<Map<Integer, Integer>> iterates;
+                StateTuple(int state, List<Integer> string, List<Map<Integer, Integer>> iterates) {
+                    this.state = state;
+                    this.string = string;
+                    this.iterates = iterates;
                 }
-                if (!mapsToString.containsKey(newMap)) {
-                    List<Integer> newString = new ArrayList<>(tuple.string);
-                    newString.add(i); // add the string BEFORE the projection from the automaton M.
 
-                    mapsToString.put(newMap, newString);
+                @Override
+                public boolean equals(Object o) {
 
-                    queue.add(new MapStringTuple(newMap, newString));
-                }
-            }
-        }
+                    // DO NOT compare the string.
+                    if (this == o) {
+                        return true;
+                    }
+                    if (o == null || this.getClass() != o.getClass()) {
+                        return false;
+                    }
+                    StateTuple other = (StateTuple) o;
+                    if (this.state != other.state) {
+                        return false;
+                    }
 
-        // now to generate the actual states.
-
-        // tuple of the form (a, iters) where iters is a list of p+q maps phi_{M.O(w)}, ..., phi_{h^{p+q-1}(M.O(W))}
-        class StateIteratesTuple {
-            final int state;
-            final List<Map<Integer, Integer>> iterates;
-            StateIteratesTuple(int state, List<Map<Integer, Integer>> iterates) {
-                this.state = state;
-                this.iterates = iterates;
-            }
-
-            @Override
-            public boolean equals(Object o) {
-                if (this == o) {
+                    if (this.iterates.size() != other.iterates.size()) {
+                        return false;
+                    }
+                    for (int i = 0; i < this.iterates.size(); i++) {
+                        if (!this.iterates.get(i).equals(other.iterates.get(i))) {
+                            return false;
+                        }
+                    }
                     return true;
                 }
-                if (o == null || this.getClass() != o.getClass()) {
-                    return false;
+
+                @Override
+                public int hashCode() {
+
+                    // DO NOT use the string to hash. Only use the state and the iterates.
+                    int result = (int) (this.state ^ (this.state >>> 32));
+                    result = 31 * result + this.iterates.hashCode();
+                    return result;
                 }
-                StateIteratesTuple other = (StateIteratesTuple) o;
-                if (this.state != other.state) {
-                    return false;
-                }
-                if (this.iterates != other.iterates) {
-                    return false;
-                }
-                return true;
             }
 
-            @Override
-            public int hashCode() {
-                int result = (int) (this.state ^ (this.state >>> 32));
-                result = 31 * result + this.iterates.hashCode();
-                return result;
-            }
-        }
+            ArrayList<StateTuple> states = new ArrayList<StateTuple>();
 
-        ArrayList<StateIteratesTuple> states = new ArrayList<StateIteratesTuple>();
+            HashMap<StateTuple, Integer> statesHash = new HashMap<StateTuple, Integer>();
 
-        HashMap<StateIteratesTuple, Integer> statesHash = new HashMap<StateIteratesTuple, Integer>();
+            Queue<StateTuple> statesQueue = new LinkedList<>();
 
-        // this is a map phi_{M.O(w)} -> [phi_{M.O(w)}, phi_{M.O(h(w))}, ..., phi_{M.O(h^{p+q-1}(w))}]
-        HashMap<Map<Integer, Integer>, List<Map<Integer, Integer>>> mapToHIterates = new HashMap<Map<Integer, Integer>, List<Map<Integer, Integer>>>();
+            StateTuple initState = new StateTuple(M.q0, Arrays.asList(), createIterates(M, Arrays.asList(), p+q));
 
-        // fill up mapToHIterates
-        for (Map<Integer, Integer> map : mapsToString.keySet()) {
-            // this will be [w, h(w), ..., h^{p+q-1}(w)]
-            ArrayList<List<Integer>> hIterateStrings = new ArrayList<List<Integer>>();
+            states.add(initState);
 
-            // this will be [phi_{M.O(w)}, ... phi_{M.O(h^{p+q-1}(w))}]
-            ArrayList<Map<Integer, Integer>> hIterateMaps = new ArrayList<Map<Integer, Integer>>();
+            statesHash.put(initState, states.size() - 1);
 
-            // add w
-            hIterateStrings.add(mapsToString.get(map));
+            statesQueue.add(initState);
 
-            // add phi_{M.O(w)}
-            hIterateMaps.add(map);
+            while (statesQueue.size() > 0) {
+                StateTuple currState = statesQueue.remove();
 
-            for (int j = 1; j < p + q; j++) {
-                List<Integer> hIterateStringPrev = hIterateStrings.get(hIterateStrings.size() - 1);
-                List<Integer> hIterateStringNew = new ArrayList<Integer>();
-                for (int u = 0; u < hIterateStringPrev.size(); u++) {
+                // set up the output of this state.
+                N.O.add(sigma.get(currState.iterates.get(0).get(N.q0)).get(M.O.get(currState.state)));
+
+                N.d.add(new TreeMap<Integer,List<Integer>>());
+
+                // get h(w) where w = currState.string .
+                List<Integer> newString = new ArrayList<Integer>();
+
+                for (int u = 0; u < currState.string.size(); u++) {
 
                     // for every digit in the alphabet of M
-                    for (int l : M.d.get(u).keySet()) {
+                    for (int l : M.d.get(currState.string.get(u)).keySet()) {
 
                         // each list of states that this transition goes to.
                         // we assuming it's a DFA for now, so this has length 1 we're assuming...
 
                         // get the first index of M.d on state x and edge label l
 
-                        hIterateStringNew.add(M.d.get(hIterateStringPrev.get(u)).get(l).get(0));
+                        newString.add(M.d.get(currState.string.get(u)).get(l).get(0));
                     }
                 }
 
-                hIterateStrings.add(hIterateStringNew);
+                List<Integer> stateMorphed = new ArrayList<Integer>();
 
-                ArrayList<Integer> projectedString = new ArrayList<Integer>();
-                for (int u = 0; u < hIterateStringNew.size(); u++) {
-                    projectedString.add(M.O.get(hIterateStringNew.get(u)));
+                // relying on the di's to be sorted here...
+                for (int di : M.d.get(currState.state).keySet()) {
+                    stateMorphed.add(M.d.get(currState.state).get(di).get(0));
                 }
-                // now need to define the phi_{projectedString}. Will do this iteratively.
 
-                // start off with the identity.
-                HashMap<Integer, Integer> mapSoFar = identity;
-
-                for (int u = 0; u < projectedString.size(); u++) {
-                    HashMap<Integer, Integer> newMap = new HashMap<Integer, Integer>();
-                    for (int l = 0; l < Q; l++) {
-                        newMap.put(l, d.get(mapSoFar.get(l)).get(projectedString.get(u)).get(0));
+                // look at all of the states that this state transitions to.
+                for (int di : M.d.get(currState.state).keySet()) {
+                    // make new state string
+                    List<Integer> newStateString = new ArrayList<Integer>(newString);
+                    for (int u = 0; u < di; u++) {
+                        newStateString.add(stateMorphed.get(u));
                     }
-                    mapSoFar = newMap;
+
+                    // new state
+                    StateTuple newState = new StateTuple(
+                            stateMorphed.get(di),
+                            newStateString,
+                            createIterates(M, newStateString, p+q)
+                    );
+
+                    // check if the state is already hashed.
+                    if (!statesHash.containsKey(newState)) {
+                        states.add(newState);
+                        statesHash.put(newState, states.size() - 1);
+                        statesQueue.add(newState);
+                    }
+
+                    // set up the transition.
+                    N.d.get(N.d.size() - 1).put(di, Arrays.asList(statesHash.get(newState)));
                 }
-
-                hIterateMaps.add(mapSoFar);
             }
 
-            mapToHIterates.put(map, hIterateMaps);
-        }
+            N.Q = states.size();
 
-        for (int i = 0; i < M.Q; i++) {
-            for (Map<Integer, Integer> map : mapsToString.keySet()) {
+            N.alphabetSize = M.alphabetSize;
 
-                // put the tuple into the states hash and list.
-                StateIteratesTuple tuple = new StateIteratesTuple(i, mapToHIterates.get(map));
-
-                statesHash.put(tuple, states.size());
-
-                states.add(tuple);
-
+            long timeAfter = System.currentTimeMillis();
+            if(print){
+                String msg = prefix + "transduced: " + N.Q + " states - "+(timeAfter-timeBefore)+"ms";
+                log.append(msg + UtilityMethods.newLine());
+                System.out.println(msg);
             }
+
+            // N.minimize(false, null, null);
+
+            return N;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("Error transducing automaton");
         }
 
+    }
 
-        N.Q = states.size();
+    /**
+     * Take a string w of states of automaton M, and return the list
+     *      [phi_{M.O(w)}, phi_{M.O(h(w))}, ..., phi_{M.O(h^{size - 1}(w))}]
+     * where h is the morphism associated with M.
+     * @param M - an Automaton to be transduced
+     * @param string - a list of states of M
+     * @param size - the size of the resulting list of maps.
+     * @return
+     */
+    private List<Map<Integer, Integer>> createIterates(Automaton M, List<Integer> string, int size) {
 
+        ArrayList<Map<Integer, Integer>> iterates = new ArrayList<Map<Integer, Integer>>();
+        // start with the empty string.
+        HashMap<Integer, Integer> identity = new HashMap<Integer, Integer>();
 
+        // we want to iterate through the states of the transducer.
+        for (int i = 0; i < Q; i++) {
+            identity.put(i, i);
+        }
 
-        // the initial state is (M.q0, hIterates(identity)) where
-        // hIterates(identity) is the hIterates corresponding to the identity map
-        StateIteratesTuple initialState = new StateIteratesTuple(M.q0, mapToHIterates.get(identity));
+        ArrayList<Integer> currString = new ArrayList<Integer>(string);
 
-        N.q0 = statesHash.get(initialState);
+        for (int i = 0; i < size; i++) {
 
+            // make the map associated with currString and add it to the iterates array.
 
-        /*
-            Implement the transition function of this new automaton.
-         */
-        for (int i = 0; i < N.Q; i++) {
-            
-            N.d.add(new TreeMap<Integer,List<Integer>>());
-            for (int l : M.d.get(states.get(i).state).keySet()) {
+            // start off with the identity.
+            HashMap<Integer, Integer> mapSoFar = new HashMap<>(identity);
 
-                // apply the transition function to m
-                // the state in M to use as the first element in the tuple
-                int stateM = M.d.get(states.get(i).state).get(l).get(0);
+            for (int u = 0; u < currString.size(); u++) {
+                HashMap<Integer, Integer> newMap = new HashMap<Integer, Integer>();
+                for (int l = 0; l < Q; l++) {
+                    newMap.put(l, d.get(mapSoFar.get(l)).get(M.O.get(currString.get(u))).get(0));
+                }
+                mapSoFar = newMap;
+            }
 
-                // figure out the string to find the hIterates of (we do this by finding its corresponding map)
-                ArrayList<Integer> secondCoordString = new ArrayList<Integer>();
+            iterates.add(mapSoFar);
 
-                // w associated with the hIterates [phi_{M.O(w)}, ...]
-                // get the string by looking at the first map in hIterates then use the map to string hashmap
-                List<Integer> stateString = mapsToString.get(states.get(i).iterates.get(0));
+            // make new string currString to be h(currString), where h is the morphism associated with M.
+            if (i != size - 1) {
+                ArrayList<Integer> newString = new ArrayList<Integer>();
 
-                for (int u = 0; u < stateString.size(); u++) {
+                for (int u = 0; u < currString.size(); u++) {
 
                     // for every digit in the alphabet of M
-                    for (int y : M.d.get(stateString.get(u)).keySet()) {
+                    for (int l : M.d.get(currString.get(u)).keySet()) {
 
                         // each list of states that this transition goes to.
                         // we assuming it's a DFA for now, so this has length 1 we're assuming...
 
-                        // get the first index of M.d on state x and edge label y
-                        secondCoordString.add(M.O.get(M.d.get(stateString.get(u)).get(y).get(0)));
+                        // get the first index of M.d on state x and edge label l
+
+                        newString.add(M.d.get(currString.get(u)).get(l).get(0));
                     }
                 }
-
-                // add M.O(sigma(a)_1), ..., M.O(sigma(a)_{l-1})
-                for (int u = 0; u < l; u++) {
-                    secondCoordString.add(M.O.get(M.d.get(states.get(i).state).get(u).get(0)));
-                }
-
-                // now create the map associated with this iteratively, like before
-                // start off with the identity.
-                HashMap<Integer, Integer> mapSoFar = identity;
-
-                for (int u = 0; u < secondCoordString.size(); u++) {
-                    HashMap<Integer, Integer> newMap = new HashMap<Integer, Integer>();
-                    for (int y = 0; y < Q; y++) {
-                        newMap.put(y, d.get(mapSoFar.get(y)).get(secondCoordString.get(u)).get(0));
-                    }
-                    mapSoFar = newMap;
-                }
-
-                // now mapSoFar is a map that has hIterates associated with it.
-
-                N.d.get(i).put(l, Arrays.asList(statesHash.get(new StateIteratesTuple(stateM, mapToHIterates.get(mapSoFar)))));
+                currString = newString;
             }
         }
 
-        /*
-            Implement the projections (output for each state) to be
-            h(a, hIterates) = sigma(d(q, M.O(w)), a).
-        */
-
-        for (int i = 0; i < N.Q; i++) {
-
-            Map<Integer, Integer> map = states.get(i).iterates.get(0);
-
-            // map.get(N.q0) will be the current state.
-
-            // set what N.O.get(i) will be
-            N.O.add(sigma.get(map.get(N.q0)).get(states.get(i).state));
-        }
-
-        N.alphabetSize = M.alphabetSize;
-
-        return N;
+        return iterates;
     }
 }

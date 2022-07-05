@@ -851,11 +851,18 @@ public class Automaton {
 
     /**
      * this automaton should not be a word automaton (automaton with output). However, it can be non deterministic.
+     * Enabling the reverseMsd flag will flip the number system of the automaton from msd to lsd, and vice versa.
+     * Note that reversing the Msd will also call this function as reversals are done in the NumberSystem class upon
+     * initializing.
+     *
      * @return the reverse of this automaton
      * @throws Exception
      */
-    public void reverse(boolean print, String prefix, StringBuffer log) throws Exception {
-        if(TRUE_FALSE_AUTOMATON)return;
+    public void reverse(boolean print, String prefix, StringBuffer log, boolean reverseMsd) throws Exception {
+        if (TRUE_FALSE_AUTOMATON) {
+            return;
+        }
+
         long timeBefore = System.currentTimeMillis();
         if(print) {
             String msg = prefix + "reversing:" + Q + " states";
@@ -893,6 +900,23 @@ public class Automaton {
         subsetConstruction(setOfFinalStates,print,prefix+" ",log);
 
         minimize(print,prefix+" ",log);
+
+        // flip the number system from msd to lsd and vice versa.
+        if (reverseMsd) {
+            for (int i = 0; i < NS.size(); i++) {
+                int indexOfUnderscore = NS.get(i).getName().indexOf("_");
+                String msd_or_lsd = NS.get(i).getName().substring(0, indexOfUnderscore);
+                String suffix = NS.get(i).getName().substring(indexOfUnderscore);
+                String newName;
+                if (msd_or_lsd.equals("msd")) {
+                    newName = "lsd" + suffix;
+                }
+                else {
+                    newName = "msd" + suffix;
+                }
+                NS.set(i, new NumberSystem(newName));
+            }
+        }
 
         long timeAfter = System.currentTimeMillis();
         if(print){
@@ -2110,7 +2134,7 @@ public class Automaton {
     }
 
     private void writeAlphabet(PrintWriter out) {
-        for(int i = 0; i < A.size();i++){
+        for(int i = 0; i < A.size(); i++){
             List<Integer> l = A.get(i);
             if(NS.get(i) == null){
                 out.write("{");
@@ -3021,7 +3045,7 @@ public class Automaton {
             M.d.get(1).put(i, new ArrayList<>(dest));
         }
         if (!NS.get(n).isMsd()) {
-            M.reverse(print, prefix, log);
+            M.reverse(print, prefix, log, false);
         }
         return M;
     }
