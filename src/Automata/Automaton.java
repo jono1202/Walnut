@@ -37,6 +37,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -925,6 +926,116 @@ public class Automaton {
             System.out.println(msg);
         }
     }
+
+    /**
+     * Reverse a DFAO. Use Theorem 4.3.3 from Allouche & Shallit.
+     * @return the reverse of this automaton
+     * @throws Exception
+     */
+        public void reverseWithOutput(boolean reverseMsd, boolean print, String prefix, StringBuffer log) throws Exception {
+        if (TRUE_FALSE_AUTOMATON) {
+            return;
+        }
+        try {
+            long timeBefore = System.currentTimeMillis();
+            if(print) {
+                String msg = prefix + "reversing: " + Q + " states";
+                log.append(msg + UtilityMethods.newLine());
+                System.out.println(msg);
+            }
+
+            // need to define states, an initial state, transitions, and outputs.
+
+            ArrayList<Map<Integer, Integer>> newStates = new ArrayList<Map<Integer, Integer>>();
+
+            HashMap<Map<Integer, Integer>, Integer> newStatesHash = new HashMap<Map<Integer, Integer>, Integer>();
+
+            Queue<Map<Integer, Integer>> newStatesQueue = new LinkedList<>();
+
+            Map<Integer, Integer> newInitState = new HashMap<Integer, Integer>();
+
+            List<Integer> newO = new ArrayList<Integer>();
+
+            List<TreeMap<Integer,List<Integer>>> newD = new ArrayList<TreeMap<Integer, List<Integer>>>();
+
+            for (int i = 0; i < Q; i++) {
+                newInitState.put(i, O.get(i));
+            }
+
+            newStates.add(newInitState);
+
+            newStatesHash.put(newInitState, newStates.size() - 1);
+
+            newStatesQueue.add(newInitState);
+
+            while (newStatesQueue.size() > 0) {
+                Map<Integer, Integer> currState = newStatesQueue.remove();
+
+                // set up the output of this state to be g(q0), where g = currState.
+                newO.add(currState.get(q0));
+
+                newD.add(new TreeMap<Integer, List<Integer>>());
+
+                // assume that the
+                System.out.println("alphabet: " + d.get(q0) + ", " + d + ", " + alphabetSize);
+                if (d.get(q0).keySet().size() != alphabetSize) {
+                    throw new Exception("Automaton should be deterministic!");
+                }
+                for (int l : d.get(q0).keySet()) {
+                    Map<Integer, Integer> toState = new HashMap<Integer, Integer>();
+
+                    for (int i = 0; i < Q; i++) {
+                        toState.put(i, currState.get(d.get(i).get(l).get(0)));
+                    }
+
+                    if (!newStatesHash.containsKey(toState)) {
+                        newStates.add(toState);
+                        newStatesHash.put(toState, newStates.size() - 1);
+                        newStatesQueue.add(toState);
+                    }
+
+                    // set up the transition.
+                    newD.get(newD.size() - 1).put(l, Arrays.asList(newStatesHash.get(toState)));
+                }
+            }
+
+            Q = newStates.size();
+
+            O = newO;
+
+            d = newD;
+
+            // flip the number system from msd to lsd and vice versa.
+            if (reverseMsd) {
+                for (int i = 0; i < NS.size(); i++) {
+                    int indexOfUnderscore = NS.get(i).getName().indexOf("_");
+                    String msd_or_lsd = NS.get(i).getName().substring(0, indexOfUnderscore);
+                    String suffix = NS.get(i).getName().substring(indexOfUnderscore);
+                    String newName;
+                    if (msd_or_lsd.equals("msd")) {
+                        newName = "lsd" + suffix;
+                    }
+                    else {
+                        newName = "msd" + suffix;
+                    }
+                    NS.set(i, new NumberSystem(newName));
+                }
+            }
+
+            long timeAfter = System.currentTimeMillis();
+            if(print){
+                String msg = prefix + "reversed: " + Q + " states - "+(timeAfter-timeBefore)+"ms";
+                log.append(msg + UtilityMethods.newLine());
+                System.out.println(msg);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("Error reversing word automaton");
+        }
+
+
+    }
+
 
     /**
      * This method is used in and, or, not, and many others.

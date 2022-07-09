@@ -79,25 +79,41 @@ public class LogicalOperator extends Operator{
 	}
 	private void actNegationOrReverse(Stack<Expression> S,boolean print,String prefix,StringBuffer log) throws Exception{
 		Expression a = S.pop();
-		if(a.is(Type.automaton)){
-			String preStep = prefix + "computing "+op + a;  
-			log.append(preStep + UtilityMethods.newLine());
-			if(print){
+		if (((a.is(Type.automaton) || a.is(Type.word)) && op.equals("`")) || (op.equals("~") && a.is(Type.automaton))) {
+			if(print) {
+				String preStep = prefix + "computing "+op + a;
+				log.append(preStep + UtilityMethods.newLine());
 				System.out.println(preStep);
 			}
-			if(op.equals("`"))
-				a.M.reverse(print, prefix+" ", log, true);
-			if(op.equals("~"))
+			if(op.equals("`")) {
+				if (a.is(Type.word)) {
+					a.W.reverseWithOutput(true, print, prefix+" ", log);
+				}
+				else {
+					a.M.reverseWithOutput(true, print, prefix+" ", log);
+				}
+			}
+			else if (op.equals("~")) {
 				a.M.not(print,prefix+" ",log);
-			S.push(new Expression(op + a,a.M));
-			String postStep = prefix + "computed "+op+a;  
-			log.append(postStep + UtilityMethods.newLine());
-			if(print){
+			}
+
+			if (a.is(Type.word)) {
+				S.push(new Expression(op + a,a.W));
+			}
+			else {
+				S.push(new Expression(op + a,a.M));
+			}
+
+			if(print) {
+				String postStep = prefix + "computed "+op+a;
+				log.append(postStep + UtilityMethods.newLine());
 				System.out.println(postStep);
 			}
-			return;
 		}
-		throw new Exception("operator " + op + " cannot be applied to the operand "+a +" of type " + a.getType());		
+		else {
+			throw new Exception("operator " + op + " cannot be applied to the operand "+a +" of type " + a.getType());
+		}
+
 	}
 	private void actQuantifier(Stack<Expression> S,boolean print,String prefix,StringBuffer log) throws Exception{
 		String stringValue = "("+op + " ";
