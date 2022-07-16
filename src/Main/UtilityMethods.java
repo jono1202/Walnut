@@ -248,55 +248,33 @@ public class UtilityMethods {
 	}
 
 	/**
-	 * Get GCD of two integers
-	 * @param a - integer
-	 * @param b - integer
-	 * @return
+	 * Return the common root of two numbers a, b. If no common root exists, return -1.
+	 * https://stackoverflow.com/a/72369344/
+	 *
 	 */
-	public static int gcd(int a, int b){
-		if (a < b) {
-			return gcd(b, a);
-		}
-		if (a % b == 0) {
-			return b;
-		}
-		else return gcd(b, a % b);
-	}
+	public static int commonRoot(int a, int b) {
+		int temp;
 
-	/**
-	 * Get LCM of two integers.
-	 * @param a - integer
-	 * @param b - integer
-	 * @return
-	 */
-	public static int lcm(int a, int b){
-		return ( (a * b) / gcd(a, b));
-	}
+		if (a == 1 || b == 1) {
+			return -1;
+		}
+		else if (a == b) {
+			return a;
+		}
 
-	/**
-	 * Taking a list of integers, a start and end index, return the LCM of the sublist formed by the start and end.
-	 * @param lst - list of integers
-	 * @param start - start index of the sublist
-	 * @param end - end index of the sublist
-	 * @return the LCM of the list of integers
-	 */
-	public static int lcmOfListWithStartAndEnd(List<Integer> lst, int start, int end) {
-		if ((end - start) == 1) {
-			return lcm(lst.get(start), lst.get(end - 1));
+		// swap if necessary to ensure that a < b
+		if (a > b) {
+			temp = a;
+			a = b;
+			b = temp;
+		}
+
+		if (b % a == 0) {
+			return commonRoot(a, b / a);
 		}
 		else {
-			return (lcm(lst.get(start), lcmOfListWithStartAndEnd(lst, start + 1, end)));
+			return -1;
 		}
-
 	}
 
-
-	/**
-	 * Taking a list of integers, return the LCM.
-	 * @param lst - a list of integers
-	 * @return the LCD of the list of integers.
-	 */
-	public static int lcmOfList(List<Integer> lst) {
-		return lcmOfListWithStartAndEnd(lst, 0, lst.size());
-	}
 }

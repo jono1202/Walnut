@@ -44,7 +44,7 @@ import Automata.Transducer;
  * @author Hamoon
  */
 public class Prover {
-	static String REGEXP_FOR_THE_LIST_OF_COMMANDS = "(eval|def|macro|reg|load|ost|exit|quit|cls|clear|combine|morphism|promote|image|inf|split|rsplit|join|test|transduce|reverse)";
+	static String REGEXP_FOR_THE_LIST_OF_COMMANDS = "(eval|def|macro|reg|load|ost|exit|quit|cls|clear|combine|morphism|promote|image|inf|split|rsplit|join|test|transduce|reverse|minimize|convert)";
 	static String REGEXP_FOR_EMPTY_COMMAND = "^\\s*(;|::|:)\\s*$";
 	/**
 	 * the high-level scheme of a command is a name followed by some arguments and ending in either ; : or ::
@@ -154,6 +154,14 @@ public class Prover {
 	static String REGEXP_FOR_reverse_COMMAND = "^\\s*reverse\\s+([a-zA-Z]\\w*)\\s+([a-zA-Z]\\w*)\\s*(;|::|:)\\s*$";
 	static Pattern PATTERN_FOR_reverse_COMMAND = Pattern.compile(REGEXP_FOR_reverse_COMMAND);
 	static int GROUP_REVERSE_NEW_NAME = 1, GROUP_REVERSE_OLD_NAME = 2, GROUP_REVERSE_END = 3;
+
+	static String REGEXP_FOR_minimize_COMMAND = "^\\s*minimize\\s+([a-zA-Z]\\w*)\\s+([a-zA-Z]\\w*)\\s*(;|::|:)\\s*$";
+	static Pattern PATTERN_FOR_minimize_COMMAND = Pattern.compile(REGEXP_FOR_minimize_COMMAND);
+	static int GROUP_MINIMIZE_NEW_NAME = 1, GROUP_MINIMIZE_OLD_NAME = 2, GROUP_MINIMIZE_END = 3;
+
+//	static String REGEXP_FOR_convert_COMMAND = "^\\s*minimize\\s+([a-zA-Z]\\w*)\\s+([a-zA-Z]\\w*)\\s*(;|::|:)\\s*$";
+//	static Pattern PATTERN_FOR_minimize_COMMAND = Pattern.compile(REGEXP_FOR_minimize_COMMAND);
+//	static int GROUP_MINIMIZE_NEW_NAME = 1, GROUP_MINIMIZE_OLD_NAME = 2, GROUP_MINIMIZE_END = 3;
 
 	/**
 	 * if the command line argument is not empty, we treat args[0] as a filename.
@@ -337,6 +345,8 @@ public class Prover {
 			transduceCommand(s);
 		} else if (commandName.equals("reverse")) {
 			reverseCommand(s);
+		} else if (commandName.equals("minimize")) {
+			minimizeCommand(s);
 		} else {
 			throw new Exception("Invalid command " + commandName + ".");
 		}
@@ -383,6 +393,8 @@ public class Prover {
 			return transduceCommand(s);
 		} else if (commandName.equals("reverse")) {
 			return reverseCommand(s);
+		} else if (commandName.equals("minimize")) {
+			return minimizeCommand(s);
 		} else {
 			throw new Exception("Invalid command: " + commandName);
 		}
@@ -963,6 +975,35 @@ public class Prover {
 			throw new Exception("Error reversing word automaton.");
 		}
 	}
+
+
+	public static TestCase minimizeCommand(String s) throws Exception {
+		try {
+			Matcher m = PATTERN_FOR_minimize_COMMAND.matcher(s);
+			if(!m.find()) {
+				throw new Exception("Invalid use of minimize command.");
+			}
+
+			boolean printSteps = m.group(GROUP_MINIMIZE_END).equals(":");
+			boolean printDetails = m.group(GROUP_MINIMIZE_END).equals("::");
+			String prefix = new String();
+			StringBuffer log = new StringBuffer();
+
+			Automaton M = new Automaton(UtilityMethods.get_address_for_words_library() +
+					m.group(GROUP_MINIMIZE_OLD_NAME) + ".txt");
+
+			M.minimizeWithOutput(printSteps || printDetails, prefix, log);
+
+			M.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_MINIMIZE_NEW_NAME)+".gv", s, true);
+			M.write(UtilityMethods.get_address_for_result()+m.group(GROUP_MINIMIZE_NEW_NAME)+".txt");
+			M.write(UtilityMethods.get_address_for_words_library()+m.group(GROUP_MINIMIZE_NEW_NAME)+".txt");
+			return new TestCase(s,M,"","","");
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new Exception("Error minimizing word automaton.");
+		}
+	}
+
 
 	public static void clearScreen() {
 	    System.out.print("\033[H\033[2J");
