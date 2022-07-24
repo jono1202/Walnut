@@ -279,6 +279,13 @@ public class Transducer extends Automaton {
                 System.out.println(msg);
             }
 
+            boolean toLsd = false;
+
+            if (!M.NS.get(0).isMsd()) {
+                toLsd = true;
+                M.reverseWithOutput(true, print, prefix+" ", log);
+            }
+
             /**
              * N will be the returned Automaton, just have to build it up.
              */
@@ -560,6 +567,10 @@ public class Transducer extends Automaton {
             N.Q = states.size();
 
             N.alphabetSize = M.alphabetSize;
+
+            if (toLsd) {
+                N.reverseWithOutput(true, print, prefix+" ", log);
+            }
 
             long timeAfter = System.currentTimeMillis();
             if(print){
