@@ -87,7 +87,7 @@ public class LogicalOperator extends Operator{
 			}
 			if(op.equals("`")) {
 				if (a.is(Type.word)) {
-					a.W.reverseWithOutput(true, print, prefix+" ", log);
+					throw new Exception("Cannot reverse a word automaton with `, use the reverse command instead.");
 				}
 				else {
 					a.M.reverseWithOutput(true, print, prefix+" ", log);

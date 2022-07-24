@@ -502,7 +502,7 @@ public class Transducer extends Automaton {
                 StateTuple currState = statesQueue.remove();
 
                 // set up the output of this state.
-                N.O.add(sigma.get(currState.iterates.get(0).get(N.q0)).get(M.O.get(currState.state)));
+                N.O.add(sigma.get(currState.iterates.get(0).get(q0)).get(M.O.get(currState.state)));
 
                 N.d.add(new TreeMap<Integer,List<Integer>>());
 

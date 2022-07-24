@@ -159,9 +159,12 @@ public class Prover {
 	static Pattern PATTERN_FOR_minimize_COMMAND = Pattern.compile(REGEXP_FOR_minimize_COMMAND);
 	static int GROUP_MINIMIZE_NEW_NAME = 1, GROUP_MINIMIZE_OLD_NAME = 2, GROUP_MINIMIZE_END = 3;
 
-//	static String REGEXP_FOR_convert_COMMAND = "^\\s*minimize\\s+([a-zA-Z]\\w*)\\s+([a-zA-Z]\\w*)\\s*(;|::|:)\\s*$";
-//	static Pattern PATTERN_FOR_minimize_COMMAND = Pattern.compile(REGEXP_FOR_minimize_COMMAND);
-//	static int GROUP_MINIMIZE_NEW_NAME = 1, GROUP_MINIMIZE_OLD_NAME = 2, GROUP_MINIMIZE_END = 3;
+	static String REGEXP_FOR_convert_COMMAND = "^\\s*convert\\s+(\\$|\\s*)([a-zA-Z]\\w*)\\s+((msd|lsd)_(\\d+))\\s+(\\$|\\s*)([a-zA-Z]\\w*)\\s*(;|::|:)\\s*$";
+	static Pattern PATTERN_FOR_convert_COMMAND = Pattern.compile(REGEXP_FOR_convert_COMMAND);
+	static int GROUP_CONVERT_NEW_NAME = 2, GROUP_CONVERT_OLD_NAME = 7, GROUP_CONVERT_END = 8,
+				GROUP_CONVERT_NEW_DOLLAR_SIGN = 1, GROUP_CONVERT_OLD_DOLLAR_SIGN = 6,
+				GROUP_CONVERT_NUMBER_SYSTEM = 3, GROUP_CONVERT_MSD_OR_LSD = 4,
+				GROUP_CONVERT_BASE = 5;
 
 	/**
 	 * if the command line argument is not empty, we treat args[0] as a filename.
@@ -347,6 +350,8 @@ public class Prover {
 			reverseCommand(s);
 		} else if (commandName.equals("minimize")) {
 			minimizeCommand(s);
+		} else if (commandName.equals("convert")) {
+			convertCommand(s);
 		} else {
 			throw new Exception("Invalid command " + commandName + ".");
 		}
@@ -395,6 +400,8 @@ public class Prover {
 			return reverseCommand(s);
 		} else if (commandName.equals("minimize")) {
 			return minimizeCommand(s);
+		} else if (commandName.equals("convert")) {
+			return convertCommand(s);
 		} else {
 			throw new Exception("Invalid command: " + commandName);
 		}
@@ -1001,6 +1008,57 @@ public class Prover {
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new Exception("Error minimizing word automaton.");
+		}
+	}
+
+
+	/**
+	 *
+	 * @param s
+	 * @return
+	 * @throws Exception
+	 */
+	public static TestCase convertCommand(String s) throws Exception {
+		try {
+			Matcher m = PATTERN_FOR_convert_COMMAND.matcher(s);
+			if(!m.find()) {
+				throw new Exception("Invalid use of convert command.");
+			}
+
+			if (m.group(GROUP_CONVERT_NEW_DOLLAR_SIGN).equals("$")
+					&& !m.group(GROUP_CONVERT_OLD_DOLLAR_SIGN).equals("$")) {
+				throw new Exception("Cannot convert a Word Automaton into a function");
+			}
+
+			String numberSystem = m.group(GROUP_CONVERT_NUMBER_SYSTEM);
+
+			boolean printSteps = m.group(GROUP_CONVERT_END).equals(":");
+			boolean printDetails = m.group(GROUP_CONVERT_END).equals("::");
+			String prefix = new String();
+			StringBuffer log = new StringBuffer();
+
+			String library = UtilityMethods.get_address_for_words_library();
+			if (m.group(GROUP_CONVERT_OLD_DOLLAR_SIGN).equals("$")) {
+				library = UtilityMethods.get_address_for_automata_library();
+			}
+			Automaton M =  new Automaton(library + m.group(GROUP_CONVERT_OLD_NAME)+".txt");
+
+			M.convert(m.group(GROUP_CONVERT_MSD_OR_LSD).equals("msd"),
+					Integer.parseInt(m.group(GROUP_CONVERT_BASE)), printSteps || printDetails,
+					prefix, log);
+
+			M.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_CONVERT_NEW_NAME)+".gv", s, true);
+			M.write(UtilityMethods.get_address_for_result()+m.group(GROUP_CONVERT_NEW_NAME)+".txt");
+
+			String outLibrary = UtilityMethods.get_address_for_words_library();
+			if (m.group(GROUP_CONVERT_NEW_DOLLAR_SIGN).equals("$")) {
+				outLibrary = UtilityMethods.get_address_for_automata_library();
+			}
+			M.write(outLibrary + m.group(GROUP_CONVERT_NEW_NAME)+".txt");
+			return new TestCase(s,M,"","","");
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new Exception("Error converting automaton.");
 		}
 	}
 

@@ -866,7 +866,7 @@ public class Automaton {
 
         long timeBefore = System.currentTimeMillis();
         if(print) {
-            String msg = prefix + "reversing:" + Q + " states";
+            String msg = prefix + "Reversing:" + Q + " states";
             log.append(msg + UtilityMethods.newLine());
             System.out.println(msg);
         }
@@ -1057,7 +1057,7 @@ public class Automaton {
             String base = nsName.substring(nsName.indexOf("_") + 1);
 
             if(!UtilityMethods.isNumber(base) || Integer.parseInt(base) <= 1) {
-                throw new Exception("Base of number system of automaton must be a number");
+                throw new Exception("Base of number system of original automaton must be a positive integer greater than 1");
             }
 
             int fromBase = Integer.parseInt(base);
@@ -1131,29 +1131,31 @@ public class Automaton {
                                           String prefix, StringBuffer log) throws Exception {
         try {
 
-            ArrayList<Integer> newStates = new ArrayList<Integer>();
+            String nsName = NS.get(0).getName();
+            int base = Integer.parseInt(nsName.substring(nsName.indexOf("_") + 1));
 
-            Queue<Integer> newStatesQueue = new LinkedList<>();
-
-            HashMap<Integer, Integer> newStatesHash = new HashMap<Integer, Integer>();
+            long timeBefore = System.currentTimeMillis();
+            if (print) {
+                String msg = prefix + "Converting: msd_" + base + " to msd_" + (int)Math.pow(base, exponent) + ", " + Q + " states";
+                log.append(msg + UtilityMethods.newLine());
+                System.out.println(msg);
+            }
 
             List<TreeMap<Integer,List<Integer>>> newD = new ArrayList<TreeMap<Integer, List<Integer>>>();
-
-            List<Integer> newO = new ArrayList<Integer>();
 
             // need to generate the new morphism, which is h^{exponent}, where h is the original morphism.
 
             List<List<Integer>> prevMorphism = new ArrayList<List<Integer>>();
 
-            for (int j = 0; j < Q; j++) {
+            for (int q = 0; q < Q; q++) {
                 List<Integer> morphismString = new ArrayList<>();
 
-                if (d.get(j).keySet().size() != alphabetSize) {
+                if (d.get(q).keySet().size() != alphabetSize) {
                     throw new Exception("Automaton must be deterministic");
                 }
 
-                for (int di : d.get(j).keySet()) {
-                    morphismString.add(d.get(j).get(di).get(0));
+                for (int di = 0; di < alphabetSize; di++) {
+                    morphismString.add(d.get(q).get(di).get(0));
                 }
                 prevMorphism.add(morphismString);
             }
@@ -1174,44 +1176,36 @@ public class Automaton {
                 prevMorphism = new ArrayList<>(newMorphism);
             }
 
-            newStatesQueue.add(q0);
-            newStates.add(q0);
-            newStatesHash.put(q0, newStates.size() - 1);
-
-            while (newStatesQueue.size() > 0) {
-                int currState = newStatesQueue.remove();
-
+            for (int q = 0; q < Q; q++) {
                 newD.add(new TreeMap<Integer, List<Integer>>());
+                for (int di = 0; di < prevMorphism.get(q).size(); di++) {
 
-                // set up output
-                newO.add(O.get(newStatesHash.get(currState)));
-
-                for (int di = 0; di < prevMorphism.get(currState).size(); di++) {
-                    int toState = prevMorphism.get(currState).get(di);
-
-                    if (!newStatesHash.containsKey(toState)) {
-                        newStates.add(toState);
-                        newStatesQueue.add(toState);
-                        newStatesHash.put(toState, newStates.size() - 1);
-                    }
+                    int toState = prevMorphism.get(q).get(di);
 
                     // set up transition
-                    newD.get(newD.size() - 1).put(di, Arrays.asList(newStatesHash.get(toState)));
+                    newD.get(q).put(di, Arrays.asList(toState));
                 }
             }
-
-            Q = newStates.size();
-
-            O = newO;
 
             d = newD;
 
             // change number system too.
 
-            String nsName = NS.get(0).getName();
-            String base = nsName.substring(nsName.indexOf("_") + 1);
+            NS.set(0, new NumberSystem("msd_" + (int)(Math.pow(base, exponent))));
 
-            NS.set(0, new NumberSystem("msd_" + Math.pow(Integer.parseInt(base), exponent)));
+            ArrayList<Integer> ints = new ArrayList<Integer>();
+            for (int i = 0; i < (int)(Math.pow(base, exponent)); i++) {
+                ints.add(i);
+            }
+            A = Arrays.asList(ints);
+            alphabetSize = ints.size();
+
+            if (print) {
+                long timeAfter = System.currentTimeMillis();
+                String msg = prefix + "Converted: msd_" + base + " to msd_" + (int)(Math.pow(base, exponent)) + ", " + Q + " states - " + (timeAfter-timeBefore) + "ms";
+                log.append(msg + UtilityMethods.newLine());
+                System.out.println(msg);
+            }
 
         } catch(Exception e) {
             e.printStackTrace();
@@ -1231,9 +1225,15 @@ public class Automaton {
                                           String prefix, StringBuffer log) throws Exception {
 
         try {
-
             String nsName = NS.get(0).getName();
             int base = Integer.parseInt(nsName.substring(nsName.indexOf("_") + 1));
+
+            long timeBefore = System.currentTimeMillis();
+            if (print) {
+                String msg = prefix + "Converting: msd_" + base + " to msd_" + (int)Math.pow(root, exponent) + ", " + Q + " states";
+                log.append(msg + UtilityMethods.newLine());
+                System.out.println(msg);
+            }
 
             if (base != Math.pow(root, exponent)) {
                 throw new Exception("Base of automaton must be equal to the given root to the power of the given exponent.");
@@ -1258,13 +1258,11 @@ public class Automaton {
                         return false;
                     }
                     StateTuple other = (StateTuple) o;
-                    return this.state == other.state && this.string == other.string;
+                    return this.state == other.state && this.string.equals(other.string);
                 }
 
                 @Override
                 public int hashCode() {
-
-                    // DO NOT use the string to hash. Only use the state and the iterates.
                     int result = (int) (this.state ^ (this.state >>> 32));
                     result = 31 * result + this.string.hashCode();
                     return result;
@@ -1287,47 +1285,57 @@ public class Automaton {
             newStatesQueue.add(initState);
             newStatesHash.put(initState, newStates.size() - 1);
 
+
             while (newStatesQueue.size() > 0) {
                 StateTuple currState = newStatesQueue.remove();
 
                 newD.add(new TreeMap<Integer, List<Integer>>());
 
-                int stringValue = 0;
+                if (currState.string.size() == 0) {
+                    newO.add(O.get(currState.state));
+                }
+                else {
+                    int stringValue = 0;
 
-                for (int i = 0; i < currState.string.size(); i++) {
-                    stringValue += currState.string.get(i) * Math.pow(root, currState.string.size() - 1 - i);
+                    for (int i = 0; i < currState.string.size(); i++) {
+                        stringValue += currState.string.get(i) * (int)(Math.pow(root, currState.string.size() - 1 - i));
+                    }
+
+                    // set up output
+                    newO.add(O.get(d.get(currState.state).get(stringValue).get(0)));
                 }
 
-                // set up output
-                newO.add(O.get(d.get(currState.state).get(stringValue).get(0)));
-
                 for (int di = 0; di < root; di++) {
+
+                    StateTuple toState;
+
+                    List<Integer> toStateString = new ArrayList<Integer>(currState.string);
+
+                    toStateString.add(di);
+
                     if (currState.string.size() < exponent - 1) {
-
-                        List<Integer> toStateString = new ArrayList<>(currState.string);
-
-                        toStateString.add(di);
-
-                        StateTuple toState = new StateTuple(currState.state, toStateString);
-
-                        newD.get(newD.size() - 1).put(di, Arrays.asList(newStatesHash.get(toState)));
+                        toState = new StateTuple(currState.state, toStateString);
                     }
-                    else if (currState.string.size() == exponent - 1) {
+                    else {
 
-                        List<Integer> tempString = new ArrayList<Integer>(currState.string);
+                        int toStateStringValue = 0;
 
-                        tempString.add(di);
-
-                        int tempStringValue = 0;
-
-                        for (int i = 0; i < tempString.size(); i++) {
-                            tempStringValue += tempString.get(i) * Math.pow(root, tempString.size() - 1 - i);
+                        for (int i = 0; i < toStateString.size(); i++) {
+                            toStateStringValue += toStateString.get(i) * (int)(Math.pow(root, toStateString.size() - 1 - i));
                         }
 
-                        StateTuple toState = new StateTuple(d.get(currState.state).get(tempStringValue).get(0), Arrays.asList());
-
-                        newD.get(newD.size() - 1).put(di, Arrays.asList(newStatesHash.get(toState)));
+                        toState = new StateTuple(d.get(currState.state).get(toStateStringValue).get(0), Arrays.asList());
                     }
+
+
+                    if (!newStatesHash.containsKey(toState)) {
+                        newStates.add(toState);
+                        newStatesQueue.add(toState);
+                        newStatesHash.put(toState, newStates.size() - 1);
+                    }
+
+                    newD.get(newD.size() - 1).put(di, Arrays.asList(newStatesHash.get(toState)));
+
                 }
             }
 
@@ -1340,8 +1348,25 @@ public class Automaton {
             // change number system too.
             NS.set(0, new NumberSystem("msd_" + root));
 
-        } catch (Exception e) {
+            ArrayList<Integer> ints = new ArrayList<Integer>();
+            for (int i = 0; i < root; i++) {
+                ints.add(i);
+            }
+            A = Arrays.asList(ints);
+            alphabetSize = ints.size();
 
+            q0 = 0;
+
+            if(print) {
+                long timeAfter = System.currentTimeMillis();
+                String msg = prefix + prefix + "Converted: msd_" + base + " to msd_" + (int)(Math.pow(root, exponent)) + ", " + Q + " states - " + (timeAfter-timeBefore) + "ms";
+                log.append(msg + UtilityMethods.newLine());
+                System.out.println(msg);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("Error converting the number system msd_k^j of an automaton to msd_k");
         }
 
 
@@ -3270,9 +3295,11 @@ public class Automaton {
             for(int in = 0;in!=alphabetSize;++in){
                 dest = new HashSet<Integer>();
                 for(int q:state){
-                    if(d.get(q).containsKey(in))
-                        for(int p:d.get(q).get(in))
+                    if(d.get(q).containsKey(in)) {
+                        for(int p:d.get(q).get(in)) {
                             dest.add(p);
+                        }
+                    }
                 }
                 if(!dest.isEmpty()){
                     if(statesHash.containsKey(dest)){
