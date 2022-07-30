@@ -579,7 +579,7 @@ public class Transducer extends Automaton {
                 System.out.println(msg);
             }
 
-            // N.minimize(false, null, null);
+            N.minimizeSelfWithOutput(print, prefix+" ", log);
 
             return N;
         } catch (Exception e) {

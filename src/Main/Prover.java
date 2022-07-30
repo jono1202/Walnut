@@ -999,7 +999,7 @@ public class Prover {
 			Automaton M = new Automaton(UtilityMethods.get_address_for_words_library() +
 					m.group(GROUP_MINIMIZE_OLD_NAME) + ".txt");
 
-			M.minimizeWithOutput(printSteps || printDetails, prefix, log);
+			M.minimizeSelfWithOutput(printSteps || printDetails, prefix, log);
 
 			M.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_MINIMIZE_NEW_NAME)+".gv", s, true);
 			M.write(UtilityMethods.get_address_for_result()+m.group(GROUP_MINIMIZE_NEW_NAME)+".txt");

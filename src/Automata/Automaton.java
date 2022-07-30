@@ -1021,7 +1021,7 @@ public class Automaton {
                 }
             }
 
-            minimizeWithOutput(print, prefix+" ", log);
+            minimizeSelfWithOutput(print, prefix+" ", log);
 
             long timeAfter = System.currentTimeMillis();
             if(print){
@@ -1089,29 +1089,43 @@ public class Automaton {
 
             // run  convert algorithm assuming MSD.
 
+            boolean currentlyReversed = false;
+
             if (fromBase != commonRoot) {
                 // do k^i to k construction.
 
                 int exponent = (int)(Math.log(fromBase) / Math.log(commonRoot));
 
-                convertMsdBaseToRoot(commonRoot, exponent, print, prefix+" ", log);
+                reverseWithOutput(true, print, prefix+" ", log);
 
-                minimizeWithOutput(print, prefix+" ", log);
+                currentlyReversed = true;
+
+                convertLsdBaseToRoot(commonRoot, exponent, print, prefix+" ", log);
+
+                minimizeSelfWithOutput(print, prefix+" ", log);
+
+                // reverseWithOutput(true, print, prefix+" ", log);
             }
 
             if (toBase != commonRoot) {
                 // do k to k^i construction.
 
+                if (currentlyReversed) {
+                    reverseWithOutput(true, print, prefix+" ", log);
+                    currentlyReversed = false;
+                }
+
                 int exponent = (int)(Math.log(toBase) / Math.log(commonRoot));
 
                 convertMsdBaseToExponent(exponent, print, prefix+" ", log);
 
-                minimizeWithOutput(print, prefix+" ", log);
+                minimizeSelfWithOutput(print, prefix+" ", log);
             }
 
             // if desired base is in lsd, reverse again to lsd.
-            if (!toMsd) {
+            if (toMsd == currentlyReversed) {
                 reverseWithOutput(true, print, prefix+" ", log);
+                currentlyReversed = !currentlyReversed;
             }
 
         } catch (Exception e) {
@@ -1215,13 +1229,13 @@ public class Automaton {
     }
 
     /**
-     * Assuming this automaton is in number system msd_k^j with one input, convert it to number system msd_k with one
+     * Assuming this automaton is in number system lsd_k^j with one input, convert it to number system lsd_k with one
      * input.
      * Used as a helper method in convert()
      * @param exponent
      * @throws Exception
      */
-    private void convertMsdBaseToRoot(int root, int exponent, boolean print,
+    private void convertLsdBaseToRoot(int root, int exponent, boolean print,
                                           String prefix, StringBuffer log) throws Exception {
 
         try {
@@ -1230,7 +1244,7 @@ public class Automaton {
 
             long timeBefore = System.currentTimeMillis();
             if (print) {
-                String msg = prefix + "Converting: msd_" + base + " to msd_" + (int)Math.pow(root, exponent) + ", " + Q + " states";
+                String msg = prefix + "Converting: lsd_" + base + " to lsd_" + (int)Math.pow(root, exponent) + ", " + Q + " states";
                 log.append(msg + UtilityMethods.newLine());
                 System.out.println(msg);
             }
@@ -1298,7 +1312,7 @@ public class Automaton {
                     int stringValue = 0;
 
                     for (int i = 0; i < currState.string.size(); i++) {
-                        stringValue += currState.string.get(i) * (int)(Math.pow(root, currState.string.size() - 1 - i));
+                        stringValue += currState.string.get(i) * (int)(Math.pow(root, i));
                     }
 
                     // set up output
@@ -1321,7 +1335,7 @@ public class Automaton {
                         int toStateStringValue = 0;
 
                         for (int i = 0; i < toStateString.size(); i++) {
-                            toStateStringValue += toStateString.get(i) * (int)(Math.pow(root, toStateString.size() - 1 - i));
+                            toStateStringValue += toStateString.get(i) * (int)(Math.pow(root, i));
                         }
 
                         toState = new StateTuple(d.get(currState.state).get(toStateStringValue).get(0), Arrays.asList());
@@ -1338,6 +1352,22 @@ public class Automaton {
 
                 }
             }
+//
+//
+//            // now add a new "initial" state that has a self-loop on 0.
+//            TreeMap<Integer, List<Integer>> newInitialStateMap = new TreeMap<Integer, List<Integer>>();
+//
+//            newInitialStateMap.put(0, Arrays.asList(newStates.size()));
+//
+//            for (int di = 1; di < root; di++) {
+//                newInitialStateMap.put(di, newD.get(q0).get(di));
+//            }
+//
+//            newD.add(newInitialStateMap);
+//
+//            newO.add(newO.get(q0));
+//
+//            q0 = newStates.size();
 
             Q = newStates.size();
 
@@ -1345,8 +1375,10 @@ public class Automaton {
 
             d = newD;
 
+            canonized = false;
+
             // change number system too.
-            NS.set(0, new NumberSystem("msd_" + root));
+            NS.set(0, new NumberSystem("lsd_" + root));
 
             ArrayList<Integer> ints = new ArrayList<Integer>();
             for (int i = 0; i < root; i++) {
@@ -1355,11 +1387,9 @@ public class Automaton {
             A = Arrays.asList(ints);
             alphabetSize = ints.size();
 
-            q0 = 0;
-
             if(print) {
                 long timeAfter = System.currentTimeMillis();
-                String msg = prefix + prefix + "Converted: msd_" + base + " to msd_" + (int)(Math.pow(root, exponent)) + ", " + Q + " states - " + (timeAfter-timeBefore) + "ms";
+                String msg = prefix + prefix + "Converted: lsd_" + base + " to lsd_" + (int)(Math.pow(root, exponent)) + ", " + Q + " states - " + (timeAfter-timeBefore) + "ms";
                 log.append(msg + UtilityMethods.newLine());
                 System.out.println(msg);
             }
@@ -1927,6 +1957,11 @@ public class Automaton {
         return N;
     }
 
+    public void minimizeSelfWithOutput(boolean print, String prefix, StringBuffer log) throws Exception {
+        Automaton N = minimizeWithOutput(print, prefix, log);
+        copy(N);
+    }
+
     // Determines whether an automaton accepts infinitely many values. If it does, a regex of infinitely many accepted values (not all)
     // is given. This is true iff there exists a cycle in a minimized version of the automaton, which previously had leading or
     // trailing zeroes removed according to whether it was msd or lsd
@@ -2420,7 +2455,7 @@ public class Automaton {
                     break;
             }
         }
-        minimizeWithOutput(print,prefix+" ",log);
+        minimizeSelfWithOutput(print,prefix+" ",log);
         long timeAfter = System.currentTimeMillis();
         if(print){
             String msg = prefix + "applied operator ("+operator+ "):" + Q + " states - "+(timeAfter-timeBefore)+"ms";
@@ -2465,7 +2500,7 @@ public class Automaton {
                     break;
             }
         }
-        minimizeWithOutput(print,prefix+" ",log);
+        minimizeSelfWithOutput(print,prefix+" ",log);
         long timeAfter = System.currentTimeMillis();
         if(print){
             String msg = prefix + "applied operator ("+operator+ "):" + Q + " states - "+(timeAfter-timeBefore)+"ms";
