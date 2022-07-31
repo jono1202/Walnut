@@ -154,7 +154,7 @@ public class Morphism {
             numSys = "?" + numSys;
         }
         String interCommand = "def " + baseAutomatonName + "_" + i.toString();
-		interCommand += " \"" + numSys + " E q, r (n=" + length.toString() + "*q+r & r<" + length.toString();
+		interCommand += " \"" + numSys + " E q, r (n=" + length.toString() + "*q+r & r>=0 & r<" + length.toString();
 		for (Integer key : this.mapping.keySet()) {
 			boolean exists = false;
 			String clause = " & (" + baseAutomatonName + "[q]";
