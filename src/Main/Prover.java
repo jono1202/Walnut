@@ -770,7 +770,7 @@ public class Prover {
 	public static TestCase joinCommand(String s) throws Exception {
 		Matcher m = PATTERN_FOR_join_COMMAND.matcher(s);
 		if(!m.find()) {
-			throw new Exception("Invalid use of reverse split command.");
+			throw new Exception("Invalid use of join command.");
 		}
 		boolean printSteps = m.group(GROUP_JOIN_END).equals(":");
 		boolean printDetails = m.group(GROUP_JOIN_END).equals("::");

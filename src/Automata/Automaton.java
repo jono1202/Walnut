@@ -18,7 +18,6 @@
 
 package Automata;
 import Main.GraphViz;
-import Main.TestCase;
 import Main.UtilityMethods;
 
 import java.io.BufferedReader;
@@ -1497,38 +1496,38 @@ public class Automaton {
         Automaton M = clone();
         Set<String> quantifiers = new HashSet<String>();
         // We label M [b0,b1,...,b(A.size()-1)]
-        if(M.label == null)M.label = new ArrayList<String>();
-        else if(M.label.size() > 0)M.label = new ArrayList<String>();
+        if(M.label == null || M.label.size() > 0) M.label = new ArrayList<String>();
         for(int i = 0 ; i < A.size();i++){
             M.label.add("b" + i);
         }
         for(int i = 0; i < inputs.size(); i++) {
             if (!inputs.get(i).equals("")) {
                 if (NS.get(i) == null)
-                    throw new Exception("Number system for input must be defined.");
+                    throw new Exception("Number system for input " + i + " must be defined.");
                 NumberSystem negativeNumberSystem;
-                if (!NS.get(i).is_neg) {
+                if (NS.get(i).is_neg) {
+                    negativeNumberSystem = NS.get(i);
+                } else {
                     try {
                         negativeNumberSystem = NS.get(i).negative_number_system();
                     } catch (Exception e) {
                         throw new Exception("Negative number system for " + NS.get(i) + " must be defined");
                     }
-                } else {
-                    negativeNumberSystem = NS.get(i);
                 }
-                if (negativeNumberSystem.comparison_neg == null) {
+                negativeNumberSystem.setBaseChange();
+                if (negativeNumberSystem.baseChange == null) {
                     throw new Exception("Number systems " + NS.get(i) + " and " + negativeNumberSystem + " cannot be compared.");
                 }
-
-                Automaton compare = negativeNumberSystem.comparison_neg.clone();
-                String a = Integer.toString(i), b = "b"+i, c = "c"+i;
+                
+                Automaton baseChange = negativeNumberSystem.baseChange.clone();
+                String a = "a"+i, b = "b"+i, c = "c"+i;
                 if (inputs.get(i).equals("+")) {
-                    compare.bind(a, b);
-                    M = M.and(compare, print, prefix, log);
+                    baseChange.bind(a, b);
+                    M = M.and(baseChange, print, prefix, log);
                     quantifiers.add(b);
                 } else { // inputs.get(i).equals("-")
-                    compare.bind(a, c);
-                    M = M.and(compare, print, prefix, log);
+                    baseChange.bind(a, c);
+                    M = M.and(baseChange, print, prefix, log);
                     M = M.and(negativeNumberSystem.arithmetic(b,c,0,"+"), print, prefix, log);
                     quantifiers.add(b); quantifiers.add(c);
                 }
@@ -1570,30 +1569,31 @@ public class Automaton {
         for(int i = 0; i < inputs.size(); i++) {
             if (!inputs.get(i).equals("")) {
                 if (NS.get(i) == null)
-                    throw new Exception("Number system for input must be defined.");
+                    throw new Exception("Number system for input " + i + " must be defined.");
                 NumberSystem negativeNumberSystem;
-                if (!NS.get(i).is_neg) {
+                if (NS.get(i).is_neg) {
+                    negativeNumberSystem = NS.get(i);
+                } else {
                     try {
                         negativeNumberSystem = NS.get(i).negative_number_system();
                     } catch (Exception e) {
                         throw new Exception("Negative number system for " + NS.get(i) + " must be defined");
                     }
-                } else {
-                    negativeNumberSystem = NS.get(i);
                 }
-                if (negativeNumberSystem.comparison_neg == null) {
+                negativeNumberSystem.setBaseChange();
+                if (negativeNumberSystem.baseChange == null) {
                     throw new Exception("Number systems " + NS.get(i) + " and " + negativeNumberSystem + " cannot be compared.");
                 }
 
-                Automaton compare = negativeNumberSystem.comparison_neg.clone();
-                String a = Integer.toString(i), b = "b"+i, c = "c"+i;
+                Automaton baseChange = negativeNumberSystem.baseChange.clone();
+                String a = "a"+i, b = "b"+i, c = "c"+i;
                 if (inputs.get(i).equals("+")) {
-                    compare.bind(b, a);
-                    M = M.and(compare, print, prefix, log);
+                    baseChange.bind(b, a);
+                    M = M.and(baseChange, print, prefix, log);
                     quantifiers.add(b);
                 } else { // inputs.get(i).equals("-")
-                    compare.bind(b, c);
-                    M = M.and(compare, print, prefix, log);
+                    baseChange.bind(b, c);
+                    M = M.and(baseChange, print, prefix, log);
                     M = M.and(negativeNumberSystem.arithmetic(a,c,0,"+"), print, prefix, log);
                     quantifiers.add(b); quantifiers.add(c);
                 }
