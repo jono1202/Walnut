@@ -688,6 +688,12 @@ public class IntegrationTest {
 		L.add("eval test520 \"?lsd_10 Ix x > 0\";");
 		L.add("eval test521 \"?msd_10 Ix x + y = z & z <= 5\";");
 		L.add("eval test522 \"?msd_neg_10 Ix 2*x = y & y >5\";");
+
+		// more split/rsplit tests
+		L.add("split test522 FTM[+]");
+		L.add("split test523 FASQ[-]");
+		L.add("rsplit test524[+] FASQ");
+		L.add("rsplit test525[-] FTM");
 	}
 	public void runPerformanceTest(String name,int numberOfRuns) throws Exception{
 		PrintWriter out = new PrintWriter(new FileOutputStream(new File(directoryAddress+performanceTestFileName), true /* append = true */));

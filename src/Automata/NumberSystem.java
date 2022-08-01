@@ -84,13 +84,14 @@ public class NumberSystem {
 	 * -lessThan has two inputs, and it accepts iff the first
 	 * one is less than the second one. So the input is ordered!<br>
 	 * -equal has two inputs, and it accepts iff they are equal.
-	 * -comparison_neg is defined only if the current number system is negative and has a corresponding comparable positive number system.
-	 * comparison_neg accepts inputs x,y if and only if x represents in the positive base the same non-negative integer and y does in the negative base.
+	 * -baseChange is defined if the number system has a corresponding comparable negative number system. * Moreover,
+	 * baseChange must be initialized manually. comparison_neg accepts inputs x,y if and only if x represents in the
+	 * positive base the same non-negative integer as y does in the negative base.
 	 */
 	public Automaton addition;
 	public Automaton lessThan;
 	public Automaton equality;
-	public Automaton comparison_neg;
+	public Automaton baseChange;
 	public Automaton allRepresentations;
 
 	/**
@@ -248,11 +249,6 @@ public class NumberSystem {
 
 		setEquality(addition.A.get(0));
 
-		//comparison with negative base
-		if(UtilityMethods.parseNegNumber(base) > 1) {
-			comparison_neg = base_n_neg_compare(UtilityMethods.parseNegNumber(base));
-		}
-
 		//the set of all representations
 		if(new File(addressForTheSetOfAllRepresentations).isFile()) {
 			allRepresentations = new Automaton(addressForTheSetOfAllRepresentations);
@@ -335,6 +331,47 @@ public class NumberSystem {
 		}
 		if(!is_msd) {
 			lessThan.reverse(false,null,null,false);
+		}
+	}
+
+	/**
+	 * Initializes equality of the positive base and negative base if not already set. Equality has two inputs (a,b),
+	 * and it accepts iff a in the positive base equals b in the negative base. The current number system can be either
+	 * the postive or negative one. This is not initialized for all number systems by default. You should call this
+	 * function to initialize as required. If no base_change file is found in the custom bases, we leave the baseChange
+	 * automaton unset.
+	 * @throws Exception
+	 */
+	public void setBaseChange() throws Exception {
+		if(baseChange != null) return;
+
+		String base = name.substring(name.indexOf("_") + 1);
+		String addressForComparison, complement_addressForComparison;
+		if(is_neg) {
+			addressForComparison = UtilityMethods.
+					get_address_for_custom_bases() + name + "_base_change.txt";
+			String complementName = (is_msd ? "lsd":"msd")+"_" + base;
+			complement_addressForComparison = UtilityMethods.
+					get_address_for_custom_bases() + complementName + "_base_change.txt";
+		} else {
+			String msd_or_lsd = name.substring(0, name.indexOf("_"));
+			addressForComparison = UtilityMethods.
+					get_address_for_custom_bases() + msd_or_lsd + "_neg_" + base + "_base_change.txt";
+			String complementName = (is_msd ? "lsd":"msd")+"_neg_" + base;
+			complement_addressForComparison = UtilityMethods.
+					get_address_for_custom_bases() + complementName + "_base_change.txt";
+		}
+
+		if(new File(addressForComparison).isFile()) {
+			baseChange = new Automaton(addressForComparison);
+		} else if(new File(complement_addressForComparison).isFile()) {
+			baseChange = new Automaton(complement_addressForComparison);
+			baseChange.reverse(false, null, null);
+		} else if(UtilityMethods.parseNegNumber(base) > 1) {
+			base_n_base_change(UtilityMethods.parseNegNumber(base));
+		}
+		if (baseChange != null) {
+			baseChange.applyAllRepresentations();
 		}
 	}
 
@@ -533,71 +570,70 @@ public class NumberSystem {
 	 * @param n
 	 * @throws Exception
 	 */
-	private Automaton base_n_neg_compare(int n) throws Exception {
+	private void base_n_base_change(int n) throws Exception {
 		List<Integer> alphabet = new ArrayList<Integer>();
 		for (int i = 0; i < n; i++) alphabet.add(i);
-		Automaton compare = new Automaton();
-		compare.Q = 4;
-		compare.q0 = 0;
-		compare.O.add(1);
-		compare.O.add(1);
-		compare.O.add(0);
-		compare.O.add(0);
-		compare.d.add(new TreeMap<Integer, List<Integer>>());
-		compare.d.add(new TreeMap<Integer, List<Integer>>());
-		compare.d.add(new TreeMap<Integer, List<Integer>>());
-		compare.d.add(new TreeMap<Integer, List<Integer>>());
+		baseChange = new Automaton();
+		baseChange.Q = 4;
+		baseChange.q0 = 0;
+		baseChange.O.add(1);
+		baseChange.O.add(1);
+		baseChange.O.add(0);
+		baseChange.O.add(0);
+		baseChange.d.add(new TreeMap<Integer, List<Integer>>());
+		baseChange.d.add(new TreeMap<Integer, List<Integer>>());
+		baseChange.d.add(new TreeMap<Integer, List<Integer>>());
+		baseChange.d.add(new TreeMap<Integer, List<Integer>>());
 		if(is_msd) {
-			compare.NS.add(new NumberSystem("msd_"+n));
-			compare.NS.add(this);
+			baseChange.NS.add(new NumberSystem("msd_"+n));
+			baseChange.NS.add(new NumberSystem("msd_neg_"+n));
 		} else {
-			compare.NS.add(new NumberSystem("lsd_"+n));
-			compare.NS.add(this);
+			baseChange.NS.add(new NumberSystem("lsd_"+n));
+			baseChange.NS.add(new NumberSystem("lsd_neg_"+n));
 		}
-		compare.A.add(new ArrayList<Integer>(alphabet));
-		compare.A.add(alphabet);
-		compare.alphabetSize = alphabet.size() * alphabet.size();
+		baseChange.A.add(new ArrayList<Integer>(alphabet));
+		baseChange.A.add(alphabet);
+		baseChange.alphabetSize = alphabet.size() * alphabet.size();
 		int l = 0;
 		for(int j = 0; j < n;j++){
 			for(int i = 0 ; i < n;i++){
 				if(i == 0 && j == 0){
 					List<Integer> dest = new ArrayList<Integer>();
 					dest.add(0);
-					compare.d.get(1).put(l,dest);
+					baseChange.d.get(1).put(l,dest);
 				}
 				if(i == j){
 					List<Integer> dest = new ArrayList<Integer>();
 					dest.add(1);
-					compare.d.get(0).put(l,dest);
+					baseChange.d.get(0).put(l,dest);
 				}
 				if(i+1 == j){
 					List<Integer> dest = new ArrayList<Integer>();
 					dest.add(1);
-					compare.d.get(2).put(l,dest);
+					baseChange.d.get(2).put(l,dest);
 				}
 				if(i+j == n){
 					List<Integer> dest = new ArrayList<Integer>();
 					dest.add(2);
-					compare.d.get(1).put(l,dest);
+					baseChange.d.get(1).put(l,dest);
 				}
 				if(i+j == n-1){
 					List<Integer> dest = new ArrayList<Integer>();
 					dest.add(2);
-					compare.d.get(3).put(l,dest);
+					baseChange.d.get(3).put(l,dest);
 				}
 				if(i == n-1 && j == 0){
 					List<Integer> dest = new ArrayList<Integer>();
 					dest.add(3);
-					compare.d.get(2).put(l,dest);
+					baseChange.d.get(2).put(l,dest);
 				}
 				l++;
 			}
 		}
 
 		if(is_msd) {
-			compare.reverse(false,null,null,false);
+			baseChange.reverse(false,null,null);
 		}
-		return compare;
 	}
 
 	/**
