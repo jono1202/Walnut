@@ -926,6 +926,10 @@ public class Automaton {
         }
     }
 
+    public void reverse(boolean print, String prefix, StringBuffer log) throws Exception {
+        reverse(print, prefix, log, false);
+    }
+
     /**
      * Reverse a DFAO. Use Theorem 4.3.3 from Allouche & Shallit.
      * @throws Exception
