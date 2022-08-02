@@ -50,22 +50,6 @@ import Main.UtilityMethods;
  */
 public class Transducer extends Automaton {
 
-    /**
-     * Output Alpabet for the output function sigma.
-     * For example when G = [[-1, 1], [0, 1, 2, 3]], the first and second inputs are over the alphabets
-     * {-1, 1} and {0, 1, 2, 3} respectively.
-     *
-     * Note that G is a list of sets, but for technical reasons, it is a list of lists. However, we must make sure that,
-     * at all times, the inner lists of G do not contain repeated elements.
-     */
-    public List<List<Integer>> G;
-
-    /**
-     * Output alphabet size.
-     * For example, if G = [[-1, 1], [0, 1, 2, 3]], then outputAlphabetSize = 8, and if G = [[-1, 0, 1], [1, 2, 3, 4]],
-     * then outputAlphabetSize = 12.
-     */
-    public int outputAlphabetSize;
 
     /**
      * Output function for the Transducer.
@@ -89,10 +73,6 @@ public class Transducer extends Automaton {
       */
     public Transducer() {
         super();
-
-        G = new ArrayList<List<Integer>>();
-
-        outputAlphabetSize = 0;
 
         sigma = new ArrayList<TreeMap<Integer, Integer>>();
     }
@@ -588,6 +568,20 @@ public class Transducer extends Automaton {
         }
 
     }
+
+    /**
+     * Transduce a non-deterministic automaton M as in Dekking (1994).
+     *
+     * @param M - automaton to transduce
+     * @param print - whether to print details
+     * @param prefix - prefix for printing details
+     * @param log - log to write the details to
+     * @return The transduced Automaton after applying this Transducer to M.
+     * @throws Exception
+     */
+//    public Automaton transduceNonDeterministic(Automaton M, boolean print, String prefix, StringBuffer log) throws Exception {
+//
+//    }
 
     /**
      * Take a string w of states of automaton M, and return the list
