@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -739,7 +740,20 @@ public class Prover {
 		if(!m.find()) {
 			throw new Exception("Invalid use of split command.");
 		}
-		Automaton M = new Automaton(UtilityMethods.get_address_for_words_library()+m.group(GROUP_SPLIT_AUTOMATA)+".txt");
+		String addressForWordAutomaton
+				= UtilityMethods.get_address_for_words_library()+m.group(GROUP_SPLIT_AUTOMATA)+".txt";
+		String addressForAutomaton
+				= UtilityMethods.get_address_for_automata_library() + m.group(GROUP_SPLIT_AUTOMATA)+".txt";
+		Automaton M; boolean isDFAO;
+		if ((new File(addressForWordAutomaton)).exists()) {
+			M = new Automaton(addressForWordAutomaton);
+			isDFAO = true;
+		} else if ((new File(addressForAutomaton)).exists()) {
+			M = new Automaton(addressForAutomaton);
+			isDFAO = false;
+		} else {
+			throw new Exception("Automaton " + m.group(GROUP_SPLIT_AUTOMATA) + " does not exist.");
+		}
 
 		boolean printSteps = m.group(GROUP_SPLIT_END).equals(":");
 		boolean printDetails = m.group(GROUP_SPLIT_END).equals("::");
@@ -767,9 +781,13 @@ public class Prover {
 		Automaton N = subautomata.remove(0);
 		N = N.combine(new LinkedList<>(subautomata),outputs,printSteps, prefix,log);
 
-		N.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_SPLIT_NAME)+".gv", s, true);
+		N.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_SPLIT_NAME)+".gv", s, isDFAO);
 		N.write(UtilityMethods.get_address_for_result()+m.group(GROUP_SPLIT_NAME)+".txt");
-		N.write(UtilityMethods.get_address_for_words_library()+m.group(GROUP_SPLIT_NAME)+".txt");
+		if (isDFAO) {
+			N.write(UtilityMethods.get_address_for_words_library()+m.group(GROUP_SPLIT_NAME)+".txt");
+		} else {
+			N.write(UtilityMethods.get_address_for_automata_library()+m.group(GROUP_SPLIT_NAME)+".txt");
+		}
 		return new TestCase(s, N, "", "", "");
 	}
 
@@ -778,7 +796,20 @@ public class Prover {
 		if(!m.find()) {
 			throw new Exception("Invalid use of reverse split command.");
 		}
-		Automaton M = new Automaton(UtilityMethods.get_address_for_words_library()+m.group(GROUP_RSPLIT_AUTOMATA)+".txt");
+		String addressForWordAutomaton
+				= UtilityMethods.get_address_for_words_library()+m.group(GROUP_RSPLIT_AUTOMATA)+".txt";
+		String addressForAutomaton
+				= UtilityMethods.get_address_for_automata_library() + m.group(GROUP_RSPLIT_AUTOMATA)+".txt";
+		Automaton M; boolean isDFAO;
+		if ((new File(addressForWordAutomaton)).exists()) {
+			M = new Automaton(addressForWordAutomaton);
+			isDFAO = true;
+		} else if ((new File(addressForAutomaton)).exists()) {
+			M = new Automaton(addressForAutomaton);
+			isDFAO = false;
+		} else {
+			throw new Exception("Automaton " + m.group(GROUP_RSPLIT_AUTOMATA) + " does not exist.");
+		}
 
 		boolean printSteps = m.group(GROUP_RSPLIT_END).equals(":");
 		boolean printDetails = m.group(GROUP_RSPLIT_END).equals("::");
@@ -806,9 +837,13 @@ public class Prover {
 		Automaton N = subautomata.remove(0);
 		N = N.combine(new LinkedList<>(subautomata),outputs,printSteps, prefix,log);
 
-		N.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_RSPLIT_NAME)+".gv", s, true);
+		N.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_RSPLIT_NAME)+".gv", s, isDFAO);
 		N.write(UtilityMethods.get_address_for_result()+m.group(GROUP_RSPLIT_NAME)+".txt");
-		N.write(UtilityMethods.get_address_for_words_library()+m.group(GROUP_RSPLIT_NAME)+".txt");
+		if (isDFAO) {
+			N.write(UtilityMethods.get_address_for_words_library()+m.group(GROUP_RSPLIT_NAME)+".txt");
+		} else {
+			N.write(UtilityMethods.get_address_for_automata_library()+m.group(GROUP_RSPLIT_NAME)+".txt");
+		}
 		return new TestCase(s, N, "", "", "");
 	}
 
@@ -825,9 +860,23 @@ public class Prover {
 
 		Matcher m1 = PATTERN_FOR_AN_AUTOMATON_IN_join_COMMAND.matcher(m.group(GROUP_JOIN_AUTOMATA));
 		List<Automaton> subautomata = new ArrayList<>();
+		boolean isDFAO = false;
 		while (m1.find()) {
 			String automatonName = m1.group(GROUP_JOIN_AUTOMATON_NAME);
-			Automaton M = new Automaton(UtilityMethods.get_address_for_words_library()+automatonName+".txt");
+			String addressForWordAutomaton
+					= UtilityMethods.get_address_for_words_library()+automatonName+".txt";
+			String addressForAutomaton
+					= UtilityMethods.get_address_for_automata_library()+automatonName+".txt";
+			Automaton M;
+			if ((new File(addressForWordAutomaton)).exists()) {
+				M = new Automaton(addressForWordAutomaton);
+				isDFAO = true;
+			} else if ((new File(addressForAutomaton)).exists()) {
+				M = new Automaton(addressForAutomaton);
+			} else {
+				throw new Exception("Automaton " + m.group(GROUP_RSPLIT_AUTOMATA) + " does not exist.");
+			}
+
 			String automatonInputs = m1.group(GROUP_JOIN_AUTOMATON_INPUT);
 			Matcher m2 = PATTERN_FOR_AN_AUTOMATON_INPUT_IN_join_COMMAND.matcher(automatonInputs);
 			List<String> label = new ArrayList<>();
@@ -844,9 +893,13 @@ public class Prover {
 		Automaton N = subautomata.remove(0);
 		N = N.join(new LinkedList<>(subautomata),printSteps, prefix,log);
 
-		N.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_JOIN_NAME)+".gv", s, true);
+		N.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_JOIN_NAME)+".gv", s, isDFAO);
 		N.write(UtilityMethods.get_address_for_result()+m.group(GROUP_JOIN_NAME)+".txt");
-		N.write(UtilityMethods.get_address_for_words_library()+m.group(GROUP_JOIN_NAME)+".txt");
+		if (isDFAO) {
+			N.write(UtilityMethods.get_address_for_words_library()+m.group(GROUP_JOIN_NAME)+".txt");
+		} else {
+			N.write(UtilityMethods.get_address_for_automata_library()+m.group(GROUP_JOIN_NAME)+".txt");
+		}
 		return new TestCase(s, N, "", "", "");
 	}
 
