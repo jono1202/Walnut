@@ -1447,7 +1447,7 @@ public class Automaton {
 
         long timeBefore = System.currentTimeMillis();
         if (print) {
-            String msg = prefix + "computing cross product:" + Q + " states - " + M.Q + " states";
+            String msg = prefix + "Computing cross product:" + Q + " states - " + M.Q + " states";
             log.append(msg + UtilityMethods.newLine());
             System.out.println(msg);
         }
@@ -1513,6 +1513,19 @@ public class Automaton {
         statesHash.put(Arrays.asList(q0, M.q0), 0);
         int currentState = 0;
         while(currentState<statesList.size()){
+
+            if (print) {
+                int statesSoFar = currentState + 1;
+                long timeAfter = System.currentTimeMillis();
+                if (statesSoFar == 1e2 || statesSoFar == 1e3 || statesSoFar % 1e4 == 0) {
+                    String msg = prefix + "  Progress: Added " + statesSoFar + " states - "
+                            + (statesList.size() - statesSoFar) + " states left in queue - "
+                            + statesList.size() + " reachable states - " + (timeAfter-timeBefore)+"ms";
+                    log.append(msg + UtilityMethods.newLine());
+                    System.out.println(msg);
+                }
+            }
+
             List<Integer> s = statesList.get(currentState);
 
             // s must be an array of length 2, where the first element is a state in this, and the second element is a
@@ -3318,8 +3331,7 @@ public class Automaton {
             if (print) {
                 int statesSoFar = current_state + 1;
                 long timeAfter = System.currentTimeMillis();
-                if (statesSoFar == 1e2 || statesSoFar == 1e3
-                        || (statesSoFar % 1e4 == 0 && statesSoFar > 0)) {
+                if (statesSoFar == 1e2 || statesSoFar == 1e3 || statesSoFar % 1e4 == 0) {
                     String msg = prefix + "  Progress: Added " + statesSoFar + " states - "
                             + (number_of_states-statesSoFar) + " states left in queue - "
                             + number_of_states + " reachable states - " + (timeAfter-timeBefore)+"ms";

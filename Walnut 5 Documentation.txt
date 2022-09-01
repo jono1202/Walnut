@@ -126,10 +126,11 @@ Reversing an automaton using the '`' operation will now change its number system
 
 #6: 	Improvements to logging.
 
-Commands that involve determinizing automata that are ran with the suffix '::' (without the quotation marks) will now include further logging that update the user on how many states have been added so far, how many states remain in the queue, and how many states have been reached in total so far.
+Commands that involve determinizing or taking the cross product of automata that are ran with the ':' or '::' suffices (without the quotation marks) will now include further logging that update the user on how many states have been added so far, how many states remain in the queue, and how many states have been reached in total so far.
 
 
 
 #7: 	Bug fixes are as follows:
 
-	- A bug has been fixed that prevented subset construction of automata with large amounts of states in certain cases.
+	- Fixed bug that prevented subset construction of automata with large amounts of states in certain cases.
+	- Fixed bug that did not allow to combine automata with negative integer outputs
