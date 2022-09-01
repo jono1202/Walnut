@@ -946,6 +946,8 @@ public class Automaton {
                 System.out.println(msg);
             }
 
+            addDistinguishedDeadState(print, prefix, log);
+
             // need to define states, an initial state, transitions, and outputs.
 
             ArrayList<Map<Integer, Integer>> newStates = new ArrayList<Map<Integer, Integer>>();
@@ -1512,7 +1514,7 @@ public class Automaton {
         statesList.add(Arrays.asList(q0, M.q0));
         statesHash.put(Arrays.asList(q0, M.q0), 0);
         int currentState = 0;
-        while(currentState<statesList.size()){
+        while (currentState < statesList.size()) {
 
             if (print) {
                 int statesSoFar = currentState + 1;
@@ -1977,6 +1979,22 @@ public class Automaton {
         Automaton N = minimizeWithOutput(print, prefix, log);
         copy(N);
     }
+//
+//    public void determinizeWithOutput(boolean print, String prefix, StringBuffer log) throws Exception {
+//        List<Integer> outputs = new ArrayList<>(O);
+//        UtilityMethods.removeDuplicates(outputs);
+//        List<Automaton> subautomata = uncombine(outputs,print,prefix,log);
+//        for (Automaton subautomaton : subautomata) {
+//            HashSet<Integer> qqq = new HashSet<Integer>();
+//            qqq.add(subautomaton.q0);
+//            subautomaton.subsetConstruction(qqq,print,prefix,log);
+//        }
+//        Automaton N = subautomata.remove(0);
+//        List<String> label = new ArrayList<>(N.label); // We keep the old labels, since they are replaced in the combine
+//        N = N.combine(new LinkedList<>(subautomata),outputs,print, prefix,log);
+//        N.label = label;
+//        copy(N);
+//    }
 
     // Determines whether an automaton accepts infinitely many values. If it does, a regex of infinitely many accepted values (not all)
     // is given. This is true iff there exists a cycle in a minimized version of the automaton, which previously had leading or
@@ -2403,6 +2421,62 @@ public class Automaton {
         long timeAfter = System.currentTimeMillis();
         if(print){
             String msg = prefix + "totalized:" + Q + " states - "+(timeAfter-timeBefore)+"ms";
+            log.append(msg + UtilityMethods.newLine());
+            System.out.println(msg);
+        }
+    }
+
+    /**
+     * This method adds a dead state with an output one less than the minimum output number of the word automaton.
+     * @throws Exception
+     */
+    public void addDistinguishedDeadState(boolean print, String prefix, StringBuffer log) throws Exception {
+        long timeBefore = System.currentTimeMillis();
+        if(print){
+            String msg = prefix + "Adding distinguished dead state: " + Q + " states";
+            log.append(msg + UtilityMethods.newLine());
+            System.out.println(msg);
+        }
+        //we first check if the automaton is totalized
+        boolean totalized = true;
+        for(int q = 0 ; q < Q;q++){
+            for(int x = 0; x < alphabetSize;x++){
+                if(!d.get(q).containsKey(x)){
+                    List<Integer> nullState = new ArrayList<Integer>();
+                    nullState.add(Q);
+                    d.get(q).put(x, nullState);
+                    totalized = false;
+                }
+            }
+        }
+        int min = 0;
+
+        if (!totalized) {
+            // obtain the minimum output
+            if (O.size() == 0) {
+                throw new Exception("Output alphabet is empty");
+            }
+            for (int i = 1; i < O.size(); i++) {
+                if (O.get(i) < min) {
+                    min = O.get(i);
+                }
+            }
+            O.add(min-1);
+            Q++;
+            for(int x = 0;x < alphabetSize;x++){
+                List<Integer> nullState = new ArrayList<Integer>();
+                nullState.add(Q-1);
+                d.add(new TreeMap<Integer,List<Integer>>());
+                d.get(Q-1).put(x, nullState);
+            }
+        }
+
+        long timeAfter = System.currentTimeMillis();
+        if(print) {
+            String msg = prefix + "Already totalized, no distinguished state added: " + Q + " states - "+(timeAfter-timeBefore)+"ms";
+            if (!totalized) {
+                msg = prefix + "Added distinguished dead state with output of " + (min-1) + ": " + Q + " states - "+(timeAfter-timeBefore)+"ms";
+            }
             log.append(msg + UtilityMethods.newLine());
             System.out.println(msg);
         }
