@@ -1514,7 +1514,7 @@ public class Automaton {
         statesList.add(Arrays.asList(q0, M.q0));
         statesHash.put(Arrays.asList(q0, M.q0), 0);
         int currentState = 0;
-        while   (currentState < statesList.size()) {
+        while (currentState < statesList.size()) {
 
             if (print) {
                 int statesSoFar = currentState + 1;
