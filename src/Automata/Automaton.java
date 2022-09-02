@@ -2456,14 +2456,14 @@ public class Automaton {
             if (O.size() == 0) {
                 throw new Exception("Output alphabet is empty");
             }
-            for (int i = 1; i < O.size(); i++) {
+            for (int i = 0; i < O.size(); i++) {
                 if (O.get(i) < min) {
                     min = O.get(i);
                 }
             }
             O.add(min-1);
             Q++;
-            for(int x = 0;x < alphabetSize;x++){
+            for(int x = 0; x < alphabetSize; x++){
                 List<Integer> nullState = new ArrayList<Integer>();
                 nullState.add(Q-1);
                 d.add(new TreeMap<Integer,List<Integer>>());
