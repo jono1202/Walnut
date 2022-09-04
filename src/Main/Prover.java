@@ -999,7 +999,7 @@ public class Prover {
 			}
 			Automaton M =  new Automaton(library + m.group(GROUP_TRANSDUCE_OLD_NAME)+".txt");
 
-			Automaton C = T.transduce(M, printSteps || printDetails, prefix, log);
+			Automaton C = T.transduceNonDeterministic(M, printSteps || printDetails, prefix, log);
 			C.draw(UtilityMethods.get_address_for_result()+m.group(GROUP_TRANSDUCE_NEW_NAME)+".gv", s, true);
 			C.write(UtilityMethods.get_address_for_result()+m.group(GROUP_TRANSDUCE_NEW_NAME)+".txt");
 			C.write(UtilityMethods.get_address_for_words_library()+m.group(GROUP_TRANSDUCE_NEW_NAME)+".txt");

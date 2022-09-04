@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
+import java.util.Iterator;
 
 import java.lang.Math;
 
@@ -237,6 +238,38 @@ public class Transducer extends Automaton {
         }
     }
 
+    /**
+     * Returns a deep copy of this transducer.
+     */
+    public Transducer clone() {
+        Transducer T = new Transducer();
+        T.Q = Q;
+        T.q0 = q0;
+        T.alphabetSize = alphabetSize;
+        T.canonized = canonized;
+        T.labelSorted = labelSorted;
+        for(int i = 0 ; i < A.size();i++){
+            T.A.add(new ArrayList<Integer>(A.get(i)));
+            T.NS.add(NS.get(i));
+            if(encoder != null && encoder.size()>0){
+                if(T.encoder == null) T.encoder = new ArrayList<Integer>();
+                T.encoder.add(encoder.get(i));
+            }
+            if(label != null && label.size() == A.size())
+                T.label.add(label.get(i));
+        }
+        for(int q = 0; q < Q; q++){
+            T.O.add(O.get(q));
+            T.d.add(new TreeMap<Integer,List<Integer>>());
+            for(int x:d.get(q).keySet()){
+                T.d.get(q).put(x, new ArrayList<Integer>(d.get(q).get(x)));
+            }
+        }
+        for (int i = 0; i < sigma.size(); i++) {
+            T.sigma.add(new TreeMap<>(sigma.get(i)));
+        }
+        return T;
+    }
 
     /**
      * Transduce an Automaton M as in Dekking (1994).
@@ -251,7 +284,6 @@ public class Transducer extends Automaton {
     public Automaton transduce(Automaton M, boolean print, String prefix, StringBuffer log) throws Exception {
 
         try {
-
             long timeBefore = System.currentTimeMillis();
             if(print){
                 String msg = prefix + "transducing: " + M.Q + " state automaton - " + Q + " state transducer";
@@ -570,7 +602,8 @@ public class Transducer extends Automaton {
     }
 
     /**
-     * Transduce a non-deterministic automaton M as in Dekking (1994).
+     * Transduce an automaton that may have undefined transitions as in Dekking (1994). The automaton may not have
+     * more than one transition per input character per state.
      *
      * @param M - automaton to transduce
      * @param print - whether to print details
@@ -579,9 +612,80 @@ public class Transducer extends Automaton {
      * @return The transduced Automaton after applying this Transducer to M.
      * @throws Exception
      */
-//    public Automaton transduceNonDeterministic(Automaton M, boolean print, String prefix, StringBuffer log) throws Exception {
-//
-//    }
+    public Automaton transduceNonDeterministic(Automaton M, boolean print, String prefix, StringBuffer log) throws Exception {
+
+        // verify that the automaton is indeed nondeterministic, i.e. it has undefined transitions. If it is not, transduce normally.
+
+        if (alphabetSize != M.alphabetSize) {
+            throw new Exception("Alphabet sizes of automaton and transducer must match.");
+        }
+
+        boolean totalized = true;
+        for(int q = 0 ; q < M.Q; q++){
+            for(int x = 0; x < M.alphabetSize; x++){
+                if(!M.d.get(q).containsKey(x)) {
+                    totalized = false;
+                }
+                else if (M.d.get(q).get(x).size() > 1) {
+                    throw new Exception("Automaton must have at most one transition per input per state.");
+                }
+            }
+        }
+        if (totalized) {
+            // transduce normally
+            return transduce(M, print, prefix, log);
+        }
+        else {
+            Automaton Mnew = M.clone();
+            Mnew.addDistinguishedDeadState(print, prefix+" ", log);
+
+            // after transducing, all states with this minimum output will be removed.
+            int minOutput = 0;
+            if (Mnew.O.size() == 0) {
+                throw new Exception("Output alphabet is empty");
+            }
+            for (int i = 0; i < Mnew.O.size(); i++) {
+                if (Mnew.O.get(i) < minOutput) {
+                    minOutput = Mnew.O.get(i);
+                }
+            }
+
+            Transducer Tnew = clone();
+
+            for (int q = 0; q < Tnew.Q; q++) {
+                Tnew.d.get(q).put(minOutput, Arrays.asList(q));
+                Tnew.sigma.get(q).put(minOutput, minOutput);
+            }
+
+            Automaton N = Tnew.transduce(Mnew, print, prefix+" ", log);
+
+            // remove all states that have an output of minOutput
+            HashSet<Integer> statesRemoved = new HashSet<Integer>();
+
+            for (int q = 0; q < N.Q; q++) {
+                if (N.O.get(q) == minOutput) {
+                    statesRemoved.add(q);
+                }
+            }
+            for (int q = 0; q < N.Q; q++) {
+
+                Iterator<Integer> iter = N.d.get(q).keySet().iterator();
+
+                while (iter.hasNext()) {
+                    int x = iter.next();
+
+                    if (statesRemoved.contains(N.d.get(q).get(x).get(0))) {
+                        iter.remove();
+                    }
+                }
+            }
+
+            N.canonized = false;
+            N.canonize();
+
+            return N;
+        }
+    }
 
     /**
      * Take a string w of states of automaton M, and return the list

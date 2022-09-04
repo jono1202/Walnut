@@ -2410,10 +2410,10 @@ public class Automaton {
         if(!totalized){
             O.add(0);
             Q++;
+            d.add(new TreeMap<Integer,List<Integer>>());
             for(int x = 0;x < alphabetSize;x++){
                 List<Integer> nullState = new ArrayList<Integer>();
                 nullState.add(Q-1);
-                d.add(new TreeMap<Integer,List<Integer>>());
                 d.get(Q-1).put(x, nullState);
             }
         }
@@ -2463,10 +2463,10 @@ public class Automaton {
             }
             O.add(min-1);
             Q++;
+            d.add(new TreeMap<Integer,List<Integer>>());
             for(int x = 0; x < alphabetSize; x++){
                 List<Integer> nullState = new ArrayList<Integer>();
                 nullState.add(Q-1);
-                d.add(new TreeMap<Integer,List<Integer>>());
                 d.get(Q-1).put(x, nullState);
             }
         }
