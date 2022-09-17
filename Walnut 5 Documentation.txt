@@ -16,7 +16,7 @@ The new capabilities are as follows:
 
 #1: 	Transducing k-automatic sequences.
 
-One may now transduce automata with an integral number system (i.e. msd_k or lsd_k where k>=2 is a positive integer), with the following syntax:
+One may now transduce automata (that have at most one edge per input per two states) with the following syntax:
 
 	transduce <new> <TRANSDUCER> <old>
 
@@ -36,7 +36,7 @@ To define a transducer, create a .txt file in the Transducer Library/ folder in 
 
 <input> -> <new state> / <output>
 
-Currently, as the implementation of transducers in Walnut involves an underlying automaton, state outputs and a number system must also be written (as in definitions for automata), however state outputs may just be arbitrarily set by the user (as they are not considered in the transduction algorithm). This will be made optional in a future version.
+Currently, as the implementation of transducers in Walnut involves an underlying automaton, state outputs and a number system must also be written (as in definitions for automata), however state outputs may just be arbitrarily set by the user (as they are not considered in the transduction algorithm). The number system should be set to msd_k, where k is the size of the input alphabet. This will be made optional in a future version. 
 
 Below is an example transducer definition with three states, computing the XOR of adjacent bits in a sequence over {0, 1} (with the first output always being 0):
 
