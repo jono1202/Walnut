@@ -199,7 +199,7 @@ public class OstrowskiNumeration {
             UtilityMethods.get_address_for_custom_bases() + "msd_" + this.name + ".txt";
         File f = new File(repr_file_name);
         if(f.exists() && !f.isDirectory()) {
-            throw new Exception("Error: number system " + this.name + " already exisis.");
+            throw new Exception("Error: number system " + this.name + " already exists.");
         }
         repr.write(repr_file_name);
         System.out.println("Ostrowski representation automaton created and written to file " + repr_file_name);
