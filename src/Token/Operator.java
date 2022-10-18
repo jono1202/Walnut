@@ -52,7 +52,7 @@ public abstract class Operator extends Token{
 	}
 	public boolean isLeftParenthesis(){return leftParenthesis;}
 	public boolean rightAssociativity(){
-		if(op.equals("`") || op.equals("~"))
+		if(op.equals("`") || this.isNegation(op))
 			return true;
 		return false;
 	}
@@ -81,8 +81,30 @@ public abstract class Operator extends Token{
 			case "I":priority = 150;break;
 			case "(":priority = 200;break;
 			default:
-				priority = Integer.MAX_VALUE;
+				if (this.isNegation(op)) {
+					priority = 80;
+				}
+				else {
+					priority = Integer.MAX_VALUE;
+				}
 		}
 	}
 	public int getPriority(){return priority;}
+
+	/*
+	To allow for multiple kinds of tildes (~, ˜,  ̃), this function needs to be run instead of directly comparing the
+	character with the usual ~ tilde.
+	This function allows for the \u02dc tilde and \u0303 tilde.
+	 */
+	public boolean isNegation(String op) {
+		boolean specialNegation = false;
+
+		if (op.length() == 1) {
+			String hexString = Integer.toHexString((int) op.charAt(0));
+			// check if the string has unicode code 2dc or 303. different types of tildes.
+			specialNegation = hexString.equals("2dc") || hexString.equals("303");
+		}
+
+		return specialNegation || op.equals("~");
+	}
 }

@@ -69,7 +69,7 @@ public class Predicate {
 		return number_system_Hash;
 	}
 
-	static String REGEXP_FOR_LOGICAL_OPERATORS = "\\G\\s*(`|\\^|\\&|\\~|\\||=>|<=>|E|A|I)";
+	static String REGEXP_FOR_LOGICAL_OPERATORS = "\\G\\s*(`|\\^|\\&|\\~|\\||=>|<=>|E|A|I|\\u02DC|\\u0303)";
 	static String REGEXP_FOR_LIST_OF_QUANTIFIED_VARIABLES = "\\G\\s*((\\s*([a-zA-Z&&[^AEI]]\\w*)\\s*)(\\s*,\\s*([a-zA-Z&&[^AEI]]\\w*)\\s*)*)";
 	static String REGEXP_FOR_RELATIONAL_OPERATORS = "\\G\\s*(>=|<=|<|>|=|!=)";
 	static String REGEXP_FOR_ARITHMETIC_OPERATORS = "\\G\\s*(_|/|\\*|\\+|\\-)";
@@ -144,7 +144,7 @@ public class Predicate {
 		Operator op;
 		boolean lastTokenWasOperator = true;
 		while(index < predicate.length()){
-			if(MATCHER_FOR_LOGICAL_OPERATORS.find(index)){
+			if(MATCHER_FOR_LOGICAL_OPERATORS.find(index)) {
 				lastTokenWasOperator = true;
 				Matcher matcher = MATCHER_FOR_LOGICAL_OPERATORS;
 				if(matcher.group(1).equals("E") || matcher.group(1).equals("A") || matcher.group(1).equals("I")){

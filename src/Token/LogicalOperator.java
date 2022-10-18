@@ -32,7 +32,11 @@ public class LogicalOperator extends Operator{
 	public LogicalOperator(int position,String op) throws Exception{
 		this.op = op;
 		setPriority();
-		if(op.equals("~")||op.equals("`"))setArity(1);
+
+
+
+
+		if(this.isNegation(op) || op.equals("`")) setArity(1);
 		else setArity(2);
 		setPositionInPredicate(position);
 	}
@@ -48,7 +52,10 @@ public class LogicalOperator extends Operator{
 	public void act(Stack<Expression> S,boolean print,String prefix,StringBuffer log) throws Exception{
 		if(S.size() < getArity())throw new Exception("operator " + op + " requires " + getArity()+ " operands");
 		
-		if(op.equals("~") || op.equals("`")){actNegationOrReverse(S,print,prefix,log);return;}
+		if(this.isNegation(op) || op.equals("`")){
+			actNegationOrReverse(S,print,prefix,log);
+			return;
+		}
 		if(op.equals("E") || op.equals("A") || op.equals("I")){actQuantifier(S,print,prefix,log);return;}
 		
 		Expression b = S.pop();
@@ -87,7 +94,7 @@ public class LogicalOperator extends Operator{
 			}
 			if(op.equals("`"))
 				a.M.reverse(print, prefix+" ", log, true);
-			if(op.equals("~"))
+			if(this.isNegation(op))
 				a.M.not(print,prefix+" ",log);
 			S.push(new Expression(op + a,a.M));
 			String postStep = prefix + "computed "+op+a;
